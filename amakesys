@@ -1,0 +1,743 @@
+#!/usr/bin/env bash
+
+export fgBlack8="$(tput setaf 0)";
+export fgRed8="$(tput setaf 1)";
+export fgGreen8="$(tput setaf 2)";
+export fgYellow8="$(tput setaf 3)";
+export fgBlue8="$(tput setaf 4)";
+export fgMagenta8="$(tput setaf 5)";
+export fgCyan8="$(tput setaf 6)";
+export fgWhite8="$(tput setaf 7)";
+
+export bgBlack8="$(tput setab 0)";
+export bgRed8="$(tput setab 1)";
+export bgGreen8="$(tput setab 2)";
+export bgYellow8="$(tput setab 3)";
+export bgBlue8="$(tput setab 4)";
+export bgMagenta8="$(tput setab 5)";
+export bgCyan8="$(tput setab 6)";
+export bgWhite8="$(tput setab 7)";
+
+export txBold=$(tput bold)   # bold
+export txHalf=$(tput dim)    # half-bright
+export txUnderline=$(tput smul)   # underline
+export txEndUnder=$(tput rmul)   # exit underline
+export txReverse=$(tput rev)    # reverse
+export txStandout=$(tput smso)   # standout
+export txEndStand=$(tput rmso)   # exit standout
+export txReset=$(tput sgr0)   # reset attributes
+
+prefix="/usr/local"
+CC="gcc"
+CXX="g++"
+cc_flags="-I include/ -I /usr/local/include -MP -MMD"
+cpp_flags="-I include/ -I /usr/local/include -MP -MMD"
+ld_flags="-I include/ -I /usr/local/include -MP -MMD"
+curcomp=""
+prefix="/usr/local"
+arrnum=0
+bindir="bin"
+link="cpp"
+cppcomp="true"
+iteration=0
+debug=":"
+pctr=0
+sources=()
+unset sources
+print=()
+unset print
+trgt="1"
+asmakefile="ASMakefile"
+runtarget=""
+target=""
+currdir="$PWD"
+opts=()
+unset opts
+
+usage() {
+	echo "Usage: amakesys [options] [target] ..."
+	echo "Options:"
+	echo "--prefix [PREFIX]	Sets the directory to install always on bin directory:"
+	echo "prefixdir/bin"
+	echo "install 		Copies a run script to prefixdir/bin"
+	echo "clean			Cleans built and/or installed software"
+	echo "--debug			Shows the line being read on the ASMakefile"
+	echo "(does not work properly)"
+	echo "-r 			Creates a run script"
+	echo "-i [FILE]		Uses FILE as a ASMakefile"
+	echo "-h --help		Prints this and exits"
+	echo
+	echo "amakesys A really simple build system"
+	echo "Reads ASMakefiles and builds cpp/c sources with g++ and gcc"
+	echo "Prefixes supported: .c .cpp "
+	echo "Not tested with precompiled headers"
+	exit 0
+}
+
+case $1 in
+	--prefix)
+	prefix="$2"
+	opts+="--prefix "
+	;;
+	
+	install)
+	instopt="true"
+	opts+="install "
+	;;
+	
+	clean)
+	clsopt=true
+	opts+="clean "
+	;;
+	
+	--debug)
+	debug="echo \"Executing line: $((iteration+1))\""
+	opts+="--debug "
+	;;
+
+	-r)
+	runopt=true
+	opts+="-r "
+	;;
+	
+	-i)
+	asmakefile="$2"
+	;;
+	
+	-h|--help)
+	usage	
+	;;
+esac
+
+case $2 in
+	--prefix)
+	prefix="$3"
+	opts+="--prefix "
+	;;
+	
+	install)
+	instopt="true"
+	opts+="install "
+	;;
+	
+	clean)
+	clsopt=true
+	opts+="clean "
+	;;
+	
+	--debug)
+	debug="echo \"Executing line: $((iteration+1))\""
+	opts+="--debug "
+	;;
+
+	-r)
+	runopt=true
+	opts+="-r "
+	;;
+	
+	-i)
+	asmakefile="$3"
+	;;
+	
+	-h|--help)
+	usage	
+	;;
+esac
+
+case $3 in
+	--prefix)
+	prefix="$4"
+	opts+="--prefix "
+	;;
+	
+	install)
+	instopt="true"
+	opts+="install "
+	;;
+	
+	clean)
+	clsopt=true
+	opts+="clean "
+	;;
+	
+	--debug)
+	debug="echo \"Executing line: $((iteration+1))\""
+	opts+="--debug "
+	;;
+
+	-r)
+	runopt=true
+	opts+="-r "
+	;;
+	
+	-i)
+	asmakefile="$4"
+	;;
+	
+	-h|--help)
+	usage	
+	;;
+esac
+
+case $4 in
+	--prefix)
+	prefix="$5"
+	opts+="--prefix "
+	;;
+	
+	install)
+	instopt="true"
+	opts+="install "
+	;;
+	
+	clean)
+	clsopt=true
+	opts+="clean "
+	;;
+	
+	--debug)
+	debug="echo \"Executing line: $((iteration+1))\""
+	opts+="--debug "
+	;;
+
+	-r)
+	runopt=true
+	opts+="-r "
+	;;
+	
+	-i)
+	asmakefile="$5"
+	;;
+	
+	-h|--help)
+	usage	
+	;;
+esac
+
+case $5 in
+	--prefix)
+	prefix="$6"
+	opts+="--prefix "
+	;;
+	
+	install)
+	instopt="true"
+	opts+="install "
+	;;
+	
+	clean)
+	clsopt=true
+	opts+="clean "
+	;;
+	
+	--debug)
+	debug="echo \"Executing line: $((iteration+1))\""
+	opts+="--debug "
+	;;
+
+	-r)
+	runopt=true
+	opts+="-r "
+	;;
+	
+	-i)
+	asmakefile="$6"
+	;;
+	
+	-h|--help)
+	usage	
+	;;
+esac
+
+case $6 in
+	--prefix)
+	prefix="$7"
+	opts+="--prefix "
+	;;
+	
+	install)
+	instopt="true"
+	opts+="install "
+	;;
+	
+	clean)
+	clsopt=true
+	opts+="clean "
+	;;
+	
+	--debug)
+	debug="echo \"Executing line: $((iteration+1))\""
+	opts+="--debug "
+	;;
+
+	-r)
+	runopt=true
+	opts+="-r "
+	;;
+	
+	-i)
+	asmakefile="$7"
+	;;
+	
+	-h|--help)
+	usage
+	;;
+esac
+get_brc() {
+	line=${line#*(}
+	line=${line%)*}
+	echo $line
+}
+get_command() {
+	echo $line | tr -d " "
+}
+
+if [[ $config != "false" ]]; then
+
+echo "AMakesys build system"
+echo "Made by: Alphadinosaur89"
+
+if [[ -f $asmakefile ]]; then
+	echo "ASMakefile found"
+	echo "Making some checks. . ."
+	mkfiledir="$PWD"
+else
+	echo "ASMakefile not found"
+	echo "Exiting. . ."
+	exit 1
+fi
+
+# Check if compilers work
+
+printf "Checking if c++ (g++) compiler works. . . "
+echo '#include <iostream>
+int main() {
+    std::cout << "Hello World!";
+    return 0;
+}' > aconftest.cpp
+
+g++ aconftest.cpp
+sudo rm -rf aconftest.cpp
+if [[ -f a.out ]]; then
+	printf "ok\n"
+	sudo rm -rf a.out
+else
+	printf "failed"
+	exit 1
+fi
+
+printf "Checking if c (gcc) compiler works. . . "
+echo '#include <stdio.h>
+int main() {
+   printf("Hello, World!");
+   return 0;
+}' > aconftest.c
+
+gcc aconftest.c
+sudo rm -rf aconftest.c
+if [[ -f a.out ]]; then
+	printf "ok\n"
+	echo "Building. . ."
+	sudo rm -rf a.out
+else
+	printf "failed"
+	exit 1
+fi
+
+else
+	if [[ -f $asmakefile ]]; then
+		echo "${fgMagenta8}${txBold}Next target found${txReset}"
+		echo "${fgBlue8}${txBold}Building. . .${txReset}"
+		mkfiledir="$PWD"
+	fi	
+fi
+
+
+sed -r '/^\s*$/d' $asmakefile > $asmakefile.tmp
+# Read ASMakefile
+while IFS= read -r line; do
+	case $line in
+		project=*)
+			project=$( get_brc )
+			eval $debug
+		;;
+		version=*)
+			version=$( get_brc )
+			eval $debug
+		;;
+		cc_flags=*)
+			cc_flags=$( get_brc )
+			eval $debug
+		;;
+		cpp_flags=*)
+			cpp_flags=$( get_brc )
+			eval $debug
+		;;
+		linker_flags=*)
+			ld_flags=$( get_brc )
+			eval $debug
+		;;
+		source_dir=*)
+			srcdir=$( get_brc )
+			eval $debug
+		;;
+		bin_dir=*)
+			bindir=$( get_brc )
+			eval $debug
+		;;
+		install=*)
+			install=$( get_brc )
+			eval $debug
+		;;
+		comp_c=*)
+			ccomp=$( get_brc )
+			eval $debug
+		;;
+		comp_cpp=*)
+			cppcomp=$( get_brc )
+			eval $debug
+		;;
+		add_source=*)
+			sources[$arrnum]=$( get_brc )
+			arrnum=$((arrnum+1))
+			eval $debug
+		;;
+		link_with=*)
+			link=$( get_brc )
+			eval $debug
+		;;
+		print*)
+			print[$pctr]=$( get_brc )
+			pctr=$((pctr+1))
+			eval $debug
+		;;
+		target*)
+			config="false"
+			export config
+			target=$( get_brc )
+			runtarget="amakesys $opts -i $target"
+			export opts
+			eval $debug
+		;;
+		\#*)
+			:
+		;;
+		*)
+		echo "Syntax error or unsupported ASMakefile format"
+		echo "Line: at some line (im bad at programming)"
+		echo "Exit with code: 1"
+		sudo rm -rf $asmakefile.tmp
+		exit 1
+		;;
+	esac
+	iteration=$((iteration+1))
+done < "$asmakefile.tmp"
+sudo rm -rf $asmakefile.tmp
+
+ctr=0
+
+if [ -f build/$bindir/$project ]; then
+	echo "${fgBlue8}${txBold}Target $project already built${txReset}"
+	built="true"
+fi
+
+get_obj() {
+	case ${sources[$ctr]} in
+		*.cpp)
+		local sources[$ctr]=${sources[$ctr]::-4}
+		;;
+		
+		*.c)
+		local sources[$ctr]=${sources[$ctr]::-2}
+		;;
+	esac
+	echo "${sources[$ctr]}"
+}
+rm_o() {
+	local sources[$i]="${sources[$i]}.o"
+	case ${sources[$i]} in
+		*.cpp.o|*.c.o)
+		local sources[$i]=${sources[$i]::-2}
+		;;
+	esac
+}
+get_tobj() {
+	case ${sources[$i]} in
+		*.cpp)
+		local sources[$i]="${sources[$i]}.o "
+		;;
+		
+		*.c)
+		local sources[$i]="${sources[$i]}.o "
+		;;
+	esac
+	echo "${sources[$i]}"
+}
+get_cxx_src() {
+	cxxsrc="${sources[$ctr]}" | grep "${sources[$ctr]}.cpp"
+}
+get_c_src() {
+	ccsrc="${sources[$ctr]}" | grep "${sources[$ctr]}.c"
+}
+ok() {
+	printf "${txBold}${fgGreen8}OK${txReset}\n"
+}
+failed() {
+	failed="true"
+	printf "${txBold}${fgRed8}FAILED${txReset}\n"
+}
+
+allcxxflags="-c $srcdir/$cxxsrc -o build/objs/$cxxsrc.o $cpp_flags"
+allccflags="-c $srcdir/$ccsrc -o build/objs/$ccsrc.o $cc_flags"
+
+for ((i=0;i<${#print[*]};i++)) do
+	printf "${print[$i]}"
+done
+
+		########################
+		#    BUILD AND LINK    #
+		########################
+
+i=0
+if [ "$clsopt" != "true" ] && [ "$instopt" != "true" ] && [ "$built" != "true" ]; then
+	while (( $i < ${#sources[*]} )); do
+		curcomp=$( get_obj )
+		
+		case "${sources[$ctr]}" in 
+			*.cpp)
+			cxxsrc="${sources[$ctr]}"
+			;;
+			
+			*.c)
+			ccsrc="${sources[$ctr]}"
+			;;
+		esac
+		allcxxflags="-c $srcdir/$cxxsrc -o build/objs/$cxxsrc.o $cpp_flags -I include/ -I /usr/local/include -MP -MMD"
+		allccflags="-c $srcdir/$ccsrc -o build/objs/$ccsrc.o $cc_flags -I include/ -I /usr/local/include -MP -MMD"
+
+		get_cxx_src() {
+			echo "${sources[$ctr]}" | grep "${sources[$ctr]}.cpp"
+		}
+		get_c_src() {
+			echo "${sources[$ctr]}" | grep "${sources[$ctr]}.c"
+		}
+		
+		if [ "$cppcomp" == "true" ] || [ "$ccomp" == "true" ]; then
+			mkdir build 2>/dev/null
+			mkdir build/$bindir 2>/dev/null
+			mkdir build/objs 2>/dev/null
+		else
+			echo "Compiling is not enabled"
+		fi	
+		
+		if [[ "$ccomp" == "true" ]] && [[ ${sources[$ctr]} == "$curcomp.c" ]]; then
+			 echo "${txBold}${fgBlue8}\$(CC)${txReset} ${txBold}${fgYellow8}Compiling with:${txReset} ${txBold}${fgGreen8}$allccflags${txReset}"
+			 echo
+			if eval "$CC $allccflags"; then
+				ok
+			else
+				failed
+			fi
+		fi
+		if [ "$cppcomp" == "true" ] && [ "${sources[$ctr]}" == "$curcomp.cpp" ]; then
+			 echo "${txBold}${fgBlue8}\$(CXX)${txReset} ${txBold}${fgYellow8}Compiling with:${txReset} ${txBold}${fgGreen8}$allcxxflags${txReset}"
+			 echo
+			if eval "$CXX $allcxxflags"; then
+				ok
+			else
+				failed
+			fi
+		fi
+		ctr=$((ctr+1))
+		i=$((i+1))
+	done
+
+		# LINK
+
+	allldflags="${srcs[*]} $ld_flags -o build/$bindir/$project"
+	srcs=()
+	i="0"
+	while (( $i < ${#sources[*]} )); do
+		ssrc="build/objs/$( get_tobj )"
+		srcs+="$ssrc"
+		i=$((i+1))
+	done
+	
+	allldflags="${srcs[*]} $ld_flags -o build/$bindir/$project"
+	echo "${txBold}${fgBlue8}\$(LD)${txReset} ${txBold}${fgYellow8}Linking with:${txReset} ${txBold}${fgGreen8}$allldflags${txReset}"
+	echo
+	
+	if [[ $link == "cpp" ]]; then
+		if eval "$CXX ${srcs[*]} $ld_flags -o build/$bindir/$project"; then
+			ok
+		else
+			failed
+		fi
+	elif [[ $link == "c" ]]; then
+		if eval $CC "${srcs[*]}" $ld_flags -o build/$bindir/"$project"; then
+			ok
+		else
+			failed
+		fi			
+	fi	
+fi
+
+		#################
+		#    INSTALL    #
+		#################
+		
+if [[ $instopt == "true" ]]; then
+		
+	if [[ $install == "true" ]]; then
+	
+		echo
+		echo "${txBold}${fgYellow8}Please create your own install script${txReset}"
+		echo "${txBold}${fgBlue8}Install $project${txReset}"
+		
+		create_run
+		echo "cp $project to $prefix/bin/"
+		if sudo cp build/$bindir/$project $prefix/bin/; then
+			echo "${txBold}${fgGreen8}Installation Sucessful${txReset}"
+			installed=true
+		else
+			echo "${txBold}${fgRed8}Installation Failed${txReset}"
+		fi
+		sudo rm -rf $project
+		
+	else
+		echo "Install is not enabled"
+	fi
+	
+fi
+
+		###############
+		#    CLEAN    #
+		###############
+		
+i=0
+if [[ $clsopt == "true" ]]; then
+
+	echo
+	echo "Make sure the prefix was the same as installing!"
+	echo "${txBold}${fgBlue8}Removing $project${txReset}"
+
+	if rm -rf build/$bindir/$project; then
+		printf "${txBold}${fgGreen8}OK $project${txReset}\n"
+	else
+		failed
+		printf " $project\n"
+	fi		
+	
+	while (( $i < ${#sources[*]} )); do
+		curr="${sources[$i]}"
+		
+		echo "${txBold}${fgBlue8}Removing $curr.o${txReset}"
+		if sudo rm -rf "build/objs/${sources[$i]}.o"; then
+			if sudo rm -rf build/objs/${sources[$i]}.d; then
+				printf "${txBold}${fgGreen8}OK${txReset}"
+				printf " ${txBold}${fgGreen8}$curr${txReset}\n"
+			else
+				printf "${txBold}${fgRed8}FAILEDK${txReset}"
+				printf " ${txBold}${fgRed8}$curr${txReset}\n"
+			fi
+		else
+			printf "${txBold}${fgRed8}FAILEDK${txReset}"
+			printf " ${txBold}${fgRed8}$curr${txReset}\n"
+		fi
+		i=$((i+1))
+	done
+	
+	if [ -f run.sh ]; then
+		echo "${txBold}${fgBlue8}Removing run.sh${txReset}"
+		if sudo rm -rf "run.sh"; then
+			ok
+		else
+			failed
+		fi
+	fi
+	
+	echo "${txBold}${fgBlue8}Removing build/$bindir${txReset}"
+	if rmdir build/$bindir; then
+		ok
+	else
+		failed
+	fi
+	echo "${txBold}${fgBlue8}Removing build/objs${txReset}"
+	if rmdir build/objs; then
+		ok
+	else
+		failed
+	fi
+	echo "${txBold}${fgBlue8}Removing build${txReset}"
+	if rmdir build; then
+		ok
+	else
+		failed
+	fi
+	echo "${txBold}${fgBlue8}Removing $prefix/$bindir/$project${txReset}"
+	if sudo rm -rf "$prefix/$bindir/$project"; then
+		ok
+	else
+		failed
+	fi
+
+fi
+
+#################################
+#     CREATE A run SCRIPT    #
+#################################
+
+create_run() {
+if [[ $runopt == "true" ]]; then
+	echo "\
+#!/bin/bash
+
+$currdir/build/$bindir/$project
+exitcode=\"\$?\"
+
+fail() {
+	echo \"Program returned an error\"
+	echo \"Exit code \$exitcode\"
+}
+
+[ \"\$exitcode\" -eq \"0\" ] || fail" > $project
+	chmod 755 $project
+	fi
+}
+
+if [[ $runopt == "true" ]]; then
+	echo "\
+#!/bin/bash
+
+./build/$bindir/$project
+exitcode=\"\$?\"
+
+fail() {
+	echo \"Program returned an error\"
+	echo \"Exit code \$exitcode\"
+}
+
+[ \"\$exitcode\" -eq \"0\" ] || fail" > $project
+chmod 755 $project
+fi
+
+if [[ $failed != "false" ]]; then
+	echo "${fgMagenta8}${txBold}Target successfully built${txReset}"
+	echo
+fi
+
+asmakefile="$target"
+export asmakefile
+
+eval $runtarget
+
+exit 0
+
+
+
+
+
+
+
+
+
