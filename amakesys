@@ -439,6 +439,22 @@ sudo rm -rf $asmakefile.tmp
 
 ctr=0
 
+create_run() {
+echo "\
+#!/bin/bash
+
+$currdir/build/$bindir/$project
+exitcode=\"\$?\"
+
+fail() {
+	echo \"Program returned an error\"
+	echo \"Exit code \$exitcode\"
+}
+
+[ \"\$exitcode\" -eq \"0\" ] || fail" > $project
+chmod 755 $project
+}
+
 echo "${fgYellow8}${txBold}Current target: $project${txReset}"
 
 if [ -f build/$bindir/$project ]; then
@@ -605,16 +621,18 @@ fi
 		#################
 		
 if [[ $instopt == "true" ]]; then
-		
+	
+	echo "prefix=\"$prefix\"" > .amakecfg	
 	if [[ $install == "true" ]]; then
 	
 		echo
 		echo "${txBold}${fgYellow8}Please create your own install script${txReset}"
+		echo "${txBold}${fgYellow8}This may not work${txReset}"
 		echo "${txBold}${fgBlue8}Install $project${txReset}"
 		
 		create_run
 		echo "cp $project to $prefix/bin/"
-		if sudo cp build/$bindir/$project $prefix/bin/; then
+		if sudo cp ./$project $prefix/bin/; then
 			echo "${txBold}${fgGreen8}Installation Sucessful${txReset}"
 			installed=true
 		else
@@ -635,8 +653,7 @@ fi
 i=0
 if [[ $clsopt == "true" ]]; then
 
-	echo
-	echo "Make sure the prefix was the same as installing!"
+	source .amakecfg
 	echo "${txBold}${fgBlue8}Removing $project${txReset}"
 
 	if rm -rf build/$bindir/$project; then
@@ -704,24 +721,6 @@ fi
 #################################
 #     CREATE A run SCRIPT    #
 #################################
-
-create_run() {
-if [[ $runopt == "true" ]]; then
-	echo "\
-#!/bin/bash
-
-$currdir/build/$bindir/$project
-exitcode=\"\$?\"
-
-fail() {
-	echo \"Program returned an error\"
-	echo \"Exit code \$exitcode\"
-}
-
-[ \"\$exitcode\" -eq \"0\" ] || fail" > $project
-	chmod 755 $project
-	fi
-}
 
 if [[ $runopt == "true" ]]; then
 	echo "\
