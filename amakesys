@@ -51,6 +51,9 @@ asmakefile="ASMakefile"
 runtarget=""
 target=""
 currdir="$PWD"
+failed="false"
+alr_built="false"
+built="false"
 opts=()
 unset opts
 
@@ -436,9 +439,11 @@ sudo rm -rf $asmakefile.tmp
 
 ctr=0
 
+echo "${fgYellow8}${txBold}Current target: $project${txReset}"
+
 if [ -f build/$bindir/$project ]; then
 	echo "${fgBlue8}${txBold}Target $project already built${txReset}"
-	built="true"
+	alr_built="true"
 fi
 
 get_obj() {
@@ -499,7 +504,7 @@ done
 		########################
 
 i=0
-if [ "$clsopt" != "true" ] && [ "$instopt" != "true" ] && [ "$built" != "true" ]; then
+if [ "$clsopt" != "true" ] && [ "$instopt" != "true" ] && [ "$alr_built" != "true" ]; then
 	while (( $i < ${#sources[*]} )); do
 		curcomp=$( get_obj )
 		
@@ -554,6 +559,15 @@ if [ "$clsopt" != "true" ] && [ "$instopt" != "true" ] && [ "$built" != "true" ]
 
 		# LINK
 
+	# Check for dependencies
+	for ((i=0;i<${#sources[*]};i++)) do
+		if [ -f "build/objs/${sources[$i]}.o" ]; then
+			:
+		else
+			echo "${fgRed8}${txBold}Dependency: ${sources[$i]}.o not found${txReset}"
+		fi
+	done
+
 	allldflags="${srcs[*]} $ld_flags -o build/$bindir/$project"
 	srcs=()
 	i="0"
@@ -580,6 +594,10 @@ if [ "$clsopt" != "true" ] && [ "$instopt" != "true" ] && [ "$built" != "true" ]
 			failed
 		fi			
 	fi	
+fi
+
+if [ -f build/bin/$project ] && [ $alr_built != "true" ]; then
+	built="true"
 fi
 
 		#################
@@ -721,9 +739,14 @@ fail() {
 chmod 755 $project
 fi
 
-if [[ $failed != "false" ]]; then
+if [ "$failed" == "false" ] && [ "$built" == "true" ]; then
 	echo "${fgMagenta8}${txBold}Target successfully built${txReset}"
 	echo
+elif [[ $alr_built == "true" ]]; then
+	:
+else
+	echo "${fgRed8}${txBold}Target failed building${txReset}"
+	echo 
 fi
 
 asmakefile="$target"
@@ -732,6 +755,7 @@ export asmakefile
 eval $runtarget
 
 exit 0
+
 
 
 
