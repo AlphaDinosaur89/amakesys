@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# Declares a few colors with tput
+# Foregrownd
 export fgBlack8="$(tput setaf 0)";
 export fgRed8="$(tput setaf 1)";
 export fgGreen8="$(tput setaf 2)";
@@ -9,6 +11,7 @@ export fgMagenta8="$(tput setaf 5)";
 export fgCyan8="$(tput setaf 6)";
 export fgWhite8="$(tput setaf 7)";
 
+# Background
 export bgBlack8="$(tput setab 0)";
 export bgRed8="$(tput setab 1)";
 export bgGreen8="$(tput setab 2)";
@@ -27,6 +30,7 @@ export txStandout=$(tput smso)   # standout
 export txEndStand=$(tput rmso)   # exit standout
 export txReset=$(tput sgr0)   # reset attributes
 
+# Declares variables required/optional for amakesys to work
 prefix="/usr/local"
 CC="gcc"
 CXX="g++"
@@ -46,7 +50,6 @@ sources=()
 unset sources
 print=()
 unset print
-trgt="1"
 asmakefile="ASMakefile"
 runtarget=""
 target=""
@@ -57,18 +60,20 @@ built="false"
 opts=()
 unset opts
 
-usage() {
+# Shows the usage of amakesys
+usage() 
+{
 	echo "Usage: amakesys [options] [target] ..."
 	echo "Options:"
-	echo "--prefix [PREFIX]	Sets the directory to install always on bin directory:"
+	echo "	--prefix [PREFIX]	Sets the directory to install always on bin directory:"
 	echo "prefixdir/bin"
-	echo "install 		Copies a run script to prefixdir/bin"
-	echo "clean			Cleans built and/or installed software"
-	echo "--debug			Shows the line being read on the ASMakefile"
+	echo "	install 		Copies a run script to prefixdir/bin"
+	echo "	clean			Cleans built and/or installed software"
+	echo "	--debug			Shows the line being read on the ASMakefile"
 	echo "(does not work properly)"
-	echo "-r 			Creates a run script"
-	echo "-i [FILE]		Uses FILE as a ASMakefile"
-	echo "-h --help		Prints this and exits"
+	echo "	-r 			Creates a run script"
+	echo "	-i [FILE]		Uses FILE as a ASMakefile"
+	echo "	-h --help		Prints this and exits"
 	echo
 	echo "amakesys A really simple build system"
 	echo "Reads ASMakefiles and builds cpp/c sources with g++ and gcc"
@@ -77,222 +82,24 @@ usage() {
 	exit 0
 }
 
-case $1 in
-	--prefix)
-	prefix="$2"
-	opts+="--prefix "
-	;;
-	
-	install)
-	instopt="true"
-	opts+="install "
-	;;
-	
-	clean)
-	clsopt=true
-	opts+="clean "
-	;;
-	
-	--debug)
-	debug="echo \"Executing line: $((iteration+1))\""
-	opts+="--debug "
-	;;
-
-	-r)
-	runopt=true
-	opts+="-r "
-	;;
-	
-	-i)
-	asmakefile="$2"
-	;;
-	
-	-h|--help)
-	usage	
-	;;
-esac
-
-case $2 in
-	--prefix)
-	prefix="$3"
-	opts+="--prefix "
-	;;
-	
-	install)
-	instopt="true"
-	opts+="install "
-	;;
-	
-	clean)
-	clsopt=true
-	opts+="clean "
-	;;
-	
-	--debug)
-	debug="echo \"Executing line: $((iteration+1))\""
-	opts+="--debug "
-	;;
-
-	-r)
-	runopt=true
-	opts+="-r "
-	;;
-	
-	-i)
-	asmakefile="$3"
-	;;
-	
-	-h|--help)
-	usage	
-	;;
-esac
-
-case $3 in
-	--prefix)
-	prefix="$4"
-	opts+="--prefix "
-	;;
-	
-	install)
-	instopt="true"
-	opts+="install "
-	;;
-	
-	clean)
-	clsopt=true
-	opts+="clean "
-	;;
-	
-	--debug)
-	debug="echo \"Executing line: $((iteration+1))\""
-	opts+="--debug "
-	;;
-
-	-r)
-	runopt=true
-	opts+="-r "
-	;;
-	
-	-i)
-	asmakefile="$4"
-	;;
-	
-	-h|--help)
-	usage	
-	;;
-esac
-
-case $4 in
-	--prefix)
-	prefix="$5"
-	opts+="--prefix "
-	;;
-	
-	install)
-	instopt="true"
-	opts+="install "
-	;;
-	
-	clean)
-	clsopt=true
-	opts+="clean "
-	;;
-	
-	--debug)
-	debug="echo \"Executing line: $((iteration+1))\""
-	opts+="--debug "
-	;;
-
-	-r)
-	runopt=true
-	opts+="-r "
-	;;
-	
-	-i)
-	asmakefile="$5"
-	;;
-	
-	-h|--help)
-	usage	
-	;;
-esac
-
-case $5 in
-	--prefix)
-	prefix="$6"
-	opts+="--prefix "
-	;;
-	
-	install)
-	instopt="true"
-	opts+="install "
-	;;
-	
-	clean)
-	clsopt=true
-	opts+="clean "
-	;;
-	
-	--debug)
-	debug="echo \"Executing line: $((iteration+1))\""
-	opts+="--debug "
-	;;
-
-	-r)
-	runopt=true
-	opts+="-r "
-	;;
-	
-	-i)
-	asmakefile="$6"
-	;;
-	
-	-h|--help)
-	usage	
-	;;
-esac
-
-case $6 in
-	--prefix)
-	prefix="$7"
-	opts+="--prefix "
-	;;
-	
-	install)
-	instopt="true"
-	opts+="install "
-	;;
-	
-	clean)
-	clsopt=true
-	opts+="clean "
-	;;
-	
-	--debug)
-	debug="echo \"Executing line: $((iteration+1))\""
-	opts+="--debug "
-	;;
-
-	-r)
-	runopt=true
-	opts+="-r "
-	;;
-	
-	-i)
-	asmakefile="$7"
-	;;
-	
-	-h|--help)
-	usage
-	;;
-esac
-get_brc() {
+# Options handling
+# Can't figure out how to use getopts
+case $1 in --prefix) prefix="$2"; opts+="--prefix "; ;; install) instopt="true"; opts+="install "; ;; clean) clsopt=true; opts+="clean "; ;; --debug) debug="echo \"Executing line: $((iteration+1))\""; opts+="--debug "; ;; -r) runopt=true; opts+="-r "; ;; -i) asmakefile="$2"; ;; -h|--help) usage ; ;; esac
+case $2 in --prefix) prefix="$3"; opts+="--prefix "; ;; install) instopt="true"; opts+="install "; ;; clean) clsopt=true; opts+="clean "; ;; --debug) debug="echo \"Executing line: $((iteration+1))\""; opts+="--debug "; ;; -r) runopt=true; opts+="-r "; ;; -i) asmakefile="$3"; ;; -h|--help) usage ; ;; esac
+case $3 in --prefix) prefix="$4"; opts+="--prefix "; ;; install) instopt="true"; opts+="install "; ;; clean) clsopt=true; opts+="clean "; ;; --debug) debug="echo \"Executing line: $((iteration+1))\""; opts+="--debug "; ;; -r) runopt=true; opts+="-r "; ;; -i) asmakefile="$4"; ;; -h|--help) usage ; ;; esac
+case $4 in --prefix) prefix="$5"; opts+="--prefix "; ;; install) instopt="true"; opts+="install "; ;; clean) clsopt=true; opts+="clean "; ;; --debug) debug="echo \"Executing line: $((iteration+1))\""; opts+="--debug "; ;; -r) runopt=true; opts+="-r "; ;; -i) asmakefile="$5"; ;; -h|--help) usage ; ;; esac
+case $5 in --prefix) prefix="$6"; opts+="--prefix "; ;; install) instopt="true"; opts+="install "; ;; clean) clsopt=true; opts+="clean "; ;; --debug) debug="echo \"Executing line: $((iteration+1))\""; opts+="--debug "; ;; -r) runopt=true; opts+="-r "; ;; -i) asmakefile="$6"; ;; -h|--help) usage ; ;; esac
+case $6 in --prefix) prefix="$7"; opts+="--prefix "; ;; install) instopt="true"; opts+="install "; ;; clean) clsopt=true; opts+="clean "; ;; --debug) debug="echo \"Executing line: $((iteration+1))\""; opts+="--debug "; ;; -r) runopt=true; opts+="-r "; ;; -i) asmakefile="$7"; ;; -h|--help) usage ; ;; esac
+# gets a string inside first matching brackets
+get_brc() 
+{
 	line=${line#*(}
 	line=${line%)*}
 	echo $line
 }
-get_command() {
-	echo $line | tr -d " "
+func() 
+{
+	:
 }
 
 if [[ $config != "false" ]]; then
@@ -311,6 +118,7 @@ else
 fi
 
 # Check if compilers work
+# g++ and gcc
 
 printf "Checking if c++ (g++) compiler works. . . "
 echo '#include <iostream>
@@ -319,11 +127,11 @@ int main() {
     return 0;
 }' > aconftest.cpp
 
-g++ aconftest.cpp
+g++ aconftest.cpp -o aconftest
 sudo rm -rf aconftest.cpp
-if [[ -f a.out ]]; then
+if [[ -f aconftest ]]; then
 	printf "ok\n"
-	sudo rm -rf a.out
+	sudo rm -rf aconftest
 else
 	printf "failed"
 	exit 1
@@ -336,28 +144,30 @@ int main() {
    return 0;
 }' > aconftest.c
 
-gcc aconftest.c
+gcc aconftest.c -o aconftest
 sudo rm -rf aconftest.c
-if [[ -f a.out ]]; then
+if [[ -f aconftest ]]; then
 	printf "ok\n"
 	echo "Building. . ."
-	sudo rm -rf a.out
+	sudo rm -rf aconftest
 else
 	printf "failed"
 	exit 1
 fi
 
-else
-	if [[ -f $asmakefile ]]; then
+else # if [[ $config != "false" ]]; then
+	if [[ -f $asmakefile ]]; then # Checks for the next target
 		echo "${fgMagenta8}${txBold}Next target found${txReset}"
 		echo "${fgBlue8}${txBold}Building. . .${txReset}"
 		mkfiledir="$PWD"
 	fi	
 fi
 
-
+# Remove all blank spaces from the ASMakefile
+# and creates a ASMakefile.tmp
 sed -r '/^\s*$/d' $asmakefile > $asmakefile.tmp
 # Read ASMakefile
+# This acctually reads from the ASMakefile.tmp
 while IFS= read -r line; do
 	case $line in
 		project=*)
@@ -435,10 +245,12 @@ while IFS= read -r line; do
 	esac
 	iteration=$((iteration+1))
 done < "$asmakefile.tmp"
+# Removes the ASMakefile.tmp after reading
 sudo rm -rf $asmakefile.tmp
 
 ctr=0
 
+# Creates a run script whith the project name
 create_run() {
 echo "\
 #!/bin/bash
@@ -455,13 +267,18 @@ fail() {
 chmod 755 $project
 }
 
+# prints the current target
 echo "${fgYellow8}${txBold}Current target: $project${txReset}"
 
+# If amakesys encounters a executable the same name of the project then
+# it prints that its already built
+# And it declares a already_built (alr_built) variable
 if [ -f build/$bindir/$project ]; then
 	echo "${fgBlue8}${txBold}Target $project already built${txReset}"
 	alr_built="true"
 fi
 
+# Declare some functions used when compiling
 get_obj() {
 	case ${sources[$ctr]} in
 		*.cpp)
@@ -508,9 +325,12 @@ failed() {
 	printf "${txBold}${fgRed8}FAILED${txReset}\n"
 }
 
+# Declares the flags used by the compiler
 allcxxflags="-c $srcdir/$cxxsrc -o build/objs/$cxxsrc.o $cpp_flags"
 allccflags="-c $srcdir/$ccsrc -o build/objs/$ccsrc.o $cc_flags"
 
+# Prints everything from the print array 
+# Which is declared when reading the ASMakefile
 for ((i=0;i<${#print[*]};i++)) do
 	printf "${print[$i]}"
 done
@@ -518,12 +338,20 @@ done
 		########################
 		#    BUILD AND LINK    #
 		########################
-
+		
 i=0
 if [ "$clsopt" != "true" ] && [ "$instopt" != "true" ] && [ "$alr_built" != "true" ]; then
 	while (( $i < ${#sources[*]} )); do
 		curcomp=$( get_obj )
 		
+		# If objects are already found amakesys skips them
+		if [ -f "build/objs/${sources[$i]}.o" ]; then
+			cmp="false"
+		else
+			cmp="true"
+		fi
+
+		# Declares the current c source or c++ source
 		case "${sources[$ctr]}" in 
 			*.cpp)
 			cxxsrc="${sources[$ctr]}"
@@ -535,14 +363,9 @@ if [ "$clsopt" != "true" ] && [ "$instopt" != "true" ] && [ "$alr_built" != "tru
 		esac
 		allcxxflags="-c $srcdir/$cxxsrc -o build/objs/$cxxsrc.o $cpp_flags -I include/ -I /usr/local/include -MP -MMD"
 		allccflags="-c $srcdir/$ccsrc -o build/objs/$ccsrc.o $cc_flags -I include/ -I /usr/local/include -MP -MMD"
-
-		get_cxx_src() {
-			echo "${sources[$ctr]}" | grep "${sources[$ctr]}.cpp"
-		}
-		get_c_src() {
-			echo "${sources[$ctr]}" | grep "${sources[$ctr]}.c"
-		}
 		
+		# If a object is not found then it starts compiling
+		if [[ $cmp == "true" ]]; then
 		if [ "$cppcomp" == "true" ] || [ "$ccomp" == "true" ]; then
 			mkdir build 2>/dev/null
 			mkdir build/$bindir 2>/dev/null
@@ -569,6 +392,7 @@ if [ "$clsopt" != "true" ] && [ "$instopt" != "true" ] && [ "$alr_built" != "tru
 				failed
 			fi
 		fi
+		fi
 		ctr=$((ctr+1))
 		i=$((i+1))
 	done
@@ -583,16 +407,18 @@ if [ "$clsopt" != "true" ] && [ "$instopt" != "true" ] && [ "$alr_built" != "tru
 			echo "${fgRed8}${txBold}Dependency: ${sources[$i]}.o not found${txReset}"
 		fi
 	done
-
+	
 	allldflags="${srcs[*]} $ld_flags -o build/$bindir/$project"
 	srcs=()
 	i="0"
+	# Declares what to link
 	while (( $i < ${#sources[*]} )); do
 		ssrc="build/objs/$( get_tobj )"
 		srcs+="$ssrc"
 		i=$((i+1))
 	done
 	
+	# Declares the flags used for linking
 	allldflags="${srcs[*]} $ld_flags -o build/$bindir/$project"
 	echo "${txBold}${fgBlue8}\$(LD)${txReset} ${txBold}${fgYellow8}Linking with:${txReset} ${txBold}${fgGreen8}$allldflags${txReset}"
 	echo
@@ -612,6 +438,7 @@ if [ "$clsopt" != "true" ] && [ "$instopt" != "true" ] && [ "$alr_built" != "tru
 	fi	
 fi
 
+# Checks if it was successfully built
 if [ -f build/bin/$project ] && [ $alr_built != "true" ]; then
 	built="true"
 fi
@@ -620,8 +447,11 @@ fi
 		#    INSTALL    #
 		#################
 		
+# If amakesys install is ran then it executes this bit
 if [[ $instopt == "true" ]]; then
 	
+	# Saves the prefix in .amakecfg folder
+	# for cleaning
 	echo "prefix=\"$prefix\"" > .amakecfg	
 	if [[ $install == "true" ]]; then
 	
@@ -630,17 +460,21 @@ if [[ $instopt == "true" ]]; then
 		echo "${txBold}${fgYellow8}This may not work${txReset}"
 		echo "${txBold}${fgBlue8}Install $project${txReset}"
 		
+		# Creates a run script with the name of the project
 		create_run
 		echo "cp $project to $prefix/bin/"
+		# And copies it to PREFIXDIR/bin
+		# The directory must exist
 		if sudo cp ./$project $prefix/bin/; then
 			echo "${txBold}${fgGreen8}Installation Sucessful${txReset}"
 			installed=true
 		else
 			echo "${txBold}${fgRed8}Installation Failed${txReset}"
 		fi
+		# Removes the run script
 		sudo rm -rf $project
 		
-	else
+	else # If install is not enabled in the ASMakefile then it prints this:
 		echo "Install is not enabled"
 	fi
 	
@@ -651,11 +485,13 @@ fi
 		###############
 		
 i=0
+# If amakesys clean is ran then it executes this bit
 if [[ $clsopt == "true" ]]; then
 
+	# Gets the prefixdir
 	source .amakecfg
 	echo "${txBold}${fgBlue8}Removing $project${txReset}"
-
+	
 	if rm -rf build/$bindir/$project; then
 		printf "${txBold}${fgGreen8}OK $project${txReset}\n"
 	else
@@ -663,6 +499,7 @@ if [[ $clsopt == "true" ]]; then
 		printf " $project\n"
 	fi		
 	
+	# Detects which files to remove and remove them in a loop
 	while (( $i < ${#sources[*]} )); do
 		curr="${sources[$i]}"
 		
@@ -682,9 +519,10 @@ if [[ $clsopt == "true" ]]; then
 		i=$((i+1))
 	done
 	
-	if [ -f run.sh ]; then
-		echo "${txBold}${fgBlue8}Removing run.sh${txReset}"
-		if sudo rm -rf "run.sh"; then
+	# If a run script is found remove it
+	if [ -f "$project.sh" ]; then
+		echo "${txBold}${fgBlue8}Removing run script${txReset}"
+		if sudo rm -rf "$project.sh"; then
 			ok
 		else
 			failed
@@ -722,6 +560,7 @@ fi
 #     CREATE A run SCRIPT    #
 #################################
 
+# If amakesys -r is ran then it executes this bit
 if [[ $runopt == "true" ]]; then
 	echo "\
 #!/bin/bash
@@ -734,10 +573,12 @@ fail() {
 	echo \"Exit code \$exitcode\"
 }
 
-[ \"\$exitcode\" -eq \"0\" ] || fail" > $project
-chmod 755 $project
+[ \"\$exitcode\" -eq \"0\" ] || fail" > $project.sh
+# Creates a run script and then mark it as a executable
+chmod 755 $project.sh
 fi
 
+# Checks if the target was successfully built then it prints the state
 if [ "$failed" == "false" ] && [ "$built" == "true" ]; then
 	echo "${fgMagenta8}${txBold}Target successfully built${txReset}"
 	echo
@@ -748,11 +589,14 @@ else
 	echo 
 fi
 
+# Export the asmakefile name for the next target
 asmakefile="$target"
 export asmakefile
 
+# Runs amakesys -i TARGETNAME
 eval $runtarget
 
+# Exits with a state of 0
 exit 0
 
 
