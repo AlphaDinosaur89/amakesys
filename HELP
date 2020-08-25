@@ -1,41 +1,55 @@
-project=(project)
+All of these are dealt after reading
+Exept the following are executed when read:
+
+project(project)
 This isnt actually the project name. 
 This defines the binary name
 
-cc_flags=(cc_flags)
+cc_flags(cc_flags)
 Defines extra flags of gcc
 
-cpp_flags=(cpp_flags)
+cpp_flags(cpp_flags)
 Defines extra flags of g++
 
-linker_flags=(ld_flags)
+linker_flags(ld_flags)
 Defines the flags for linking
 
-source_dir=(srcdir)
+source_dir(srcdir)
 Defines the source directory
 
-bin_dir=(bindir)
+bin_dir(bindir)
 Defines the binary dir
 
-install=(install)
+install(install)
 true to enable amakesys install
 
-comp_c=(ccomp)
+comp_c(ccomp)
 true to enable gcc to compile c sources
 
-comp_cpp=(cppcomp)
+comp_cpp(cppcomp)
 true to enable g++ to compile c++ sources
 
-add_source=(source)
+add_source(source)
 Adds a source file to compile.
 Supported prefixes .cpp .c (more will be added)
 
-link_with=(link)
+link_with(link)
 Links with g++ or gcc.
 Any other may not work
 
 print(print)
 Prints Text after building
+
+all_cpp_sources()
+Adds all c++ sources in the source directory
+Ran when its read
+
+all_c_sources()
+Adds all c++ sources in the source directory
+Ran when its read
+
+exec_command(command)
+Executes an command when its read
 
 #
 Comment

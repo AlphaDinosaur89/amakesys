@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Declares a few colors with tput
-# Foregrownd
+# Foreground
 export fgBlack8="$(tput setaf 0)";
 export fgRed8="$(tput setaf 1)";
 export fgGreen8="$(tput setaf 2)";
@@ -20,6 +20,27 @@ export bgBlue8="$(tput setab 4)";
 export bgMagenta8="$(tput setab 5)";
 export bgCyan8="$(tput setab 6)";
 export bgWhite8="$(tput setab 7)";
+
+# Other colors
+# Foreground
+export fgLightGray="\e[37m"
+export fgDarkGray="\e[90m"
+export fgLightRed="\e[91"
+export fgLightGreen="\e[92m"
+export fgLightYellow="\e[93m"
+export fgLightBlue="\e[94m"
+export fgLightMagenta="\e[95m"
+export fgLightCyan="\e[96m"
+
+# Background
+export bgLightGray="\e[47m"
+export bgDarkGray="\e[100m"
+export bgLightRed="\e[101"
+export bgLightGreen="\e[102m"
+export bgLightYellow="\e[102m"
+export bgLightBlue="\e[104m"
+export bgLightMagenta="\e[105m"
+export bgLightCyan="\e[106m"
 
 export txBold=$(tput bold)   # bold
 export txHalf=$(tput dim)    # half-bright
@@ -53,12 +74,16 @@ unset print
 asmakefile="ASMakefile"
 runtarget=""
 target=""
+project=""
 currdir="$PWD"
 failed="false"
 alr_built="false"
 built="false"
 opts=()
 unset opts
+srcdir="."
+currentdirname="${PWD##*/}"
+l=1
 
 # Shows the usage of amakesys
 usage() 
@@ -97,9 +122,13 @@ get_brc()
 	line=${line%)*}
 	echo $line
 }
-func() 
+fail() 
 {
-	:
+	echo "$*"
+	echo "Exit with code: 1"
+	sudo rm -rf $asmakefile.tmp 
+	sudo rm -rf $asmakefile.tmp.tmp
+	exit 1 
 }
 
 if [[ $config != "false" ]]; then
@@ -163,92 +192,137 @@ else # if [[ $config != "false" ]]; then
 	fi	
 fi
 
-# Remove all blank spaces from the ASMakefile
+# Remove all blank spaces from the ASMakefile,
+# Removes all comments
 # and creates a ASMakefile.tmp
-sed -r '/^\s*$/d' $asmakefile > $asmakefile.tmp
+awk '{sub(/#.*$/,"")}1' $asmakefile > $asmakefile.tmp.tmp
+sed -r '/^\s*$/d' $asmakefile.tmp.tmp > $asmakefile.tmp
 # Read ASMakefile
 # This acctually reads from the ASMakefile.tmp
 while IFS= read -r line; do
+	iteration=$((iteration+1))
 	case $line in
-		project=*)
+		project=*|project*)
 			project=$( get_brc )
 			eval $debug
 		;;
-		version=*)
+		version=*|version*)
 			version=$( get_brc )
 			eval $debug
 		;;
-		cc_flags=*)
+		cc_flags=*|cc_flags*)
 			cc_flags=$( get_brc )
 			eval $debug
 		;;
-		cpp_flags=*)
+		cpp_flags=*|cpp_flags*)
 			cpp_flags=$( get_brc )
 			eval $debug
 		;;
-		linker_flags=*)
+		linker_flags=*|linker_flags*)
 			ld_flags=$( get_brc )
 			eval $debug
 		;;
-		source_dir=*)
+		source_dir=*|source_dir*)
 			srcdir=$( get_brc )
+			[ -d $srcdir ] || fail "Source directory $srcdir not found"
 			eval $debug
 		;;
-		bin_dir=*)
+		bin_dir=*|bin_dir*|bindir*)
 			bindir=$( get_brc )
 			eval $debug
 		;;
-		install=*)
+		install=*|install*)
 			install=$( get_brc )
 			eval $debug
 		;;
-		comp_c=*)
+		comp_c=*|comp_c*)
 			ccomp=$( get_brc )
 			eval $debug
 		;;
-		comp_cpp=*)
+		comp_cpp=*|comp_cpp*)
 			cppcomp=$( get_brc )
 			eval $debug
 		;;
-		add_source=*)
+		add_source=*|add_source*)
 			sources[$arrnum]=$( get_brc )
+			[ -f $srcdir/${sources[$arrnum]} ] || fail "Couldnt find ${sources[$arrnum]} source file"
 			arrnum=$((arrnum+1))
 			eval $debug
 		;;
-		link_with=*)
+		link_with=*|link_with*)
 			link=$( get_brc )
 			eval $debug
 		;;
-		print*)
+		print*|print=*)
 			print[$pctr]=$( get_brc )
 			pctr=$((pctr+1))
 			eval $debug
 		;;
-		target*)
+		target*|target=*)
 			config="false"
 			export config
 			target=$( get_brc )
+			[ -f "$target" ] || fail "Couldnt find $target"
 			runtarget="amakesys $opts -i $target"
 			export opts
 			eval $debug
+		;;
+		all_cpp_sources*)
+			sctr=0
+			ftype="cpp"
+			cd $srcdir
+			cppfiles=$(ls -1R *.${ftype}  2> /dev/null)
+			fileslns=$(echo "$cppfiles" | wc -l)
+			cppfiles=(${cppfiles[$*]})
+			for ((i=0;i<fileslns;i++)); do
+				j="${cppfiles[$i]}"
+				sources[$sctr]="$j"
+				sctr=$((sctr+1))
+			done
+			cd $currdir
+		;;
+		all_c_sources*)
+			sctr=0
+			ftype="c"
+			cd $srcdir
+			cppfiles=$(ls -1R *.${ftype}  2> /dev/null)
+			fileslns=$(echo "$cppfiles" | wc -l)
+			cppfiles=(${cppfiles[$*]})
+			for ((i=0;i<fileslns;i++)); do
+				j="${cppfiles[$i]}"
+				sources[$sctr]="$j"
+				sctr=$((sctr+1))
+			done
+			cd $currdir
+		;;
+		exec_command*|exec_comand=*)
+			exccmd=$( get_brc )
+			eval "$exccmd"
 		;;
 		\#*)
 			:
 		;;
 		*)
 		echo "Syntax error or unsupported ASMakefile format"
-		echo "Line: at some line (im bad at programming)"
 		echo "Exit with code: 1"
 		sudo rm -rf $asmakefile.tmp
+		sudo rm -rf $asmakefile.tmp.tmp
 		exit 1
 		;;
 	esac
-	iteration=$((iteration+1))
 done < "$asmakefile.tmp"
 # Removes the ASMakefile.tmp after reading
 sudo rm -rf $asmakefile.tmp
+sudo rm -rf $asmakefile.tmp.tmp
+
+if [[ $project == "" ]]; then
+	echo "${fgCyan8}${txBold}Project name not set${txReset}"
+	echo "${fgCyan8}${txBold}Using the current directory as it${txReset}"
+	project="$currentdirname"
+fi
 
 ctr=0
+i=0
 
 # Creates a run script whith the project name
 create_run() {
@@ -342,6 +416,7 @@ done
 i=0
 if [ "$clsopt" != "true" ] && [ "$instopt" != "true" ] && [ "$alr_built" != "true" ]; then
 	while (( $i < ${#sources[*]} )); do
+		building="true"
 		curcomp=$( get_obj )
 		
 		# If objects are already found amakesys skips them
@@ -489,15 +564,19 @@ i=0
 if [[ $clsopt == "true" ]]; then
 
 	# Gets the prefixdir
-	source .amakecfg
+	if [ -f .amakecfg ]; then
+		source .amakecfg
+	fi
 	echo "${txBold}${fgBlue8}Removing $project${txReset}"
 	
+	if [ -f build/$bindir/$project ]; then
 	if rm -rf build/$bindir/$project; then
 		printf "${txBold}${fgGreen8}OK $project${txReset}\n"
 	else
 		failed
 		printf " $project\n"
 	fi		
+	fi
 	
 	# Detects which files to remove and remove them in a loop
 	while (( $i < ${#sources[*]} )); do
@@ -528,37 +607,52 @@ if [[ $clsopt == "true" ]]; then
 			failed
 		fi
 	fi
-	
-	echo "${txBold}${fgBlue8}Removing build/$bindir${txReset}"
-	if rmdir build/$bindir; then
-		ok
+	if find "build/$bindir" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
+    		:
 	else
-		failed
+		echo "${txBold}${fgBlue8}Removing build/$bindir${txReset}"
+		if rmdir build/$bindir; then
+			ok
+		else
+			failed
+		fi
 	fi
-	echo "${txBold}${fgBlue8}Removing build/objs${txReset}"
-	if rmdir build/objs; then
-		ok
-	else
-		failed
+	if find "build/objs" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
+    		:
+    	else
+		echo "${txBold}${fgBlue8}Removing build/objs${txReset}"
+		if rmdir build/objs; then
+			ok
+		else
+			failed
+		fi
 	fi
-	echo "${txBold}${fgBlue8}Removing build${txReset}"
-	if rmdir build; then
-		ok
-	else
-		failed
+	if find "build" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
+    		:
+    	else
+		echo "${txBold}${fgBlue8}Removing build${txReset}"
+		if rmdir build; then
+			ok
+		else
+			failed
+		fi
 	fi
-	echo "${txBold}${fgBlue8}Removing $prefix/$bindir/$project${txReset}"
-	if sudo rm -rf "$prefix/$bindir/$project"; then
-		ok
-	else
-		failed
+	if find "$prefix/$bindir/$project" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
+    		:
+    	else
+		echo "${txBold}${fgBlue8}Removing $prefix/$bindir/$project${txReset}"
+		if sudo rm -rf "$prefix/$bindir/$project"; then
+			ok
+		else
+			failed
+		fi
 	fi
 
 fi
 
-#################################
-#     CREATE A run SCRIPT    #
-#################################
+		#################################
+		#     CREATE A run SCRIPT   	  #
+		#################################
 
 # If amakesys -r is ran then it executes this bit
 if [[ $runopt == "true" ]]; then
@@ -585,8 +679,10 @@ if [ "$failed" == "false" ] && [ "$built" == "true" ]; then
 elif [[ $alr_built == "true" ]]; then
 	:
 else
-	echo "${fgRed8}${txBold}Target failed building${txReset}"
-	echo 
+	if [[ $building == "true" ]]; then
+		echo "${fgRed8}${txBold}Target failed building${txReset}"
+		echo 
+	fi
 fi
 
 # Export the asmakefile name for the next target
