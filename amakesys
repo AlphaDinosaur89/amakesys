@@ -84,6 +84,7 @@ unset opts
 srcdir="."
 currentdirname="${PWD##*/}"
 l=1
+depctr=0
 
 # Shows the usage of amakesys
 usage() 
@@ -271,7 +272,7 @@ while IFS= read -r line; do
 			sctr=0
 			ftype="cpp"
 			cd $srcdir
-			cppfiles=$(ls -1R *.${ftype}  2> /dev/null)
+			cppfiles=$(ls -1R *.${ftype} 2> /dev/null)
 			fileslns=$(echo "$cppfiles" | wc -l)
 			cppfiles=(${cppfiles[$*]})
 			for ((i=0;i<fileslns;i++)); do
@@ -285,7 +286,7 @@ while IFS= read -r line; do
 			sctr=0
 			ftype="c"
 			cd $srcdir
-			cppfiles=$(ls -1R *.${ftype}  2> /dev/null)
+			cppfiles=$(ls -1R *.${ftype} 2> /dev/null)
 			fileslns=$(echo "$cppfiles" | wc -l)
 			cppfiles=(${cppfiles[$*]})
 			for ((i=0;i<fileslns;i++)); do
@@ -298,6 +299,11 @@ while IFS= read -r line; do
 		exec_command*|exec_comand=*)
 			exccmd=$( get_brc )
 			eval "$exccmd"
+		;;
+		add_dep*|add_dependency*)
+			deps[$depctr]="$( get_brc )"
+			((depctr++))
+			eval $debug
 		;;
 		\#*)
 			:
@@ -398,6 +404,12 @@ failed() {
 	failed="true"
 	printf "${txBold}${fgRed8}FAILED${txReset}\n"
 }
+create_dirs() {
+	mkdir build 2>/dev/null
+	mkdir build/$bindir 2>/dev/null
+	mkdir build/objs 2>/dev/null
+}
+create_dirs
 
 # Declares the flags used by the compiler
 allcxxflags="-c $srcdir/$cxxsrc -o build/objs/$cxxsrc.o $cpp_flags"
@@ -442,9 +454,7 @@ if [ "$clsopt" != "true" ] && [ "$instopt" != "true" ] && [ "$alr_built" != "tru
 		# If a object is not found then it starts compiling
 		if [[ $cmp == "true" ]]; then
 		if [ "$cppcomp" == "true" ] || [ "$ccomp" == "true" ]; then
-			mkdir build 2>/dev/null
-			mkdir build/$bindir 2>/dev/null
-			mkdir build/objs 2>/dev/null
+			:
 		else
 			echo "Compiling is not enabled"
 		fi	
@@ -482,6 +492,16 @@ if [ "$clsopt" != "true" ] && [ "$instopt" != "true" ] && [ "$alr_built" != "tru
 			echo "${fgRed8}${txBold}Dependency: ${sources[$i]}.o not found${txReset}"
 		fi
 	done
+
+	# Check for dependencies added with add_dep
+	# And adds it to link
+	for ((i=0;i<${#deps[*]};i++)); do
+			if [ -f "${deps[$i]}" ]; then
+				depsrcs+="${deps[$i]} "
+			else
+				echo "${fgRed8}${txBold}Dependency: ${deps[$i]} not found${txReset}"
+			fi
+	done
 	
 	allldflags="${srcs[*]} $ld_flags -o build/$bindir/$project"
 	srcs=()
@@ -494,18 +514,18 @@ if [ "$clsopt" != "true" ] && [ "$instopt" != "true" ] && [ "$alr_built" != "tru
 	done
 	
 	# Declares the flags used for linking
-	allldflags="${srcs[*]} $ld_flags -o build/$bindir/$project"
+	allldflags="${depsrcs[*]}${srcs[*]}$ld_flags -o build/$bindir/$project"
 	echo "${txBold}${fgBlue8}\$(LD)${txReset} ${txBold}${fgYellow8}Linking with:${txReset} ${txBold}${fgGreen8}$allldflags${txReset}"
 	echo
-	
+
 	if [[ $link == "cpp" ]]; then
-		if eval "$CXX ${srcs[*]} $ld_flags -o build/$bindir/$project"; then
+		if eval "$CXX $allldflags"; then
 			ok
 		else
 			failed
 		fi
 	elif [[ $link == "c" ]]; then
-		if eval $CC "${srcs[*]}" $ld_flags -o build/$bindir/"$project"; then
+		if eval $CC "$allldflags"; then
 			ok
 		else
 			failed
@@ -651,7 +671,7 @@ if [[ $clsopt == "true" ]]; then
 fi
 
 		#################################
-		#     CREATE A run SCRIPT   	  #
+		#     CREATE A run SCRIPT   	 #
 		#################################
 
 # If amakesys -r is ran then it executes this bit
