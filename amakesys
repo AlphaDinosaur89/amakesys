@@ -77,7 +77,7 @@ target=""
 project=""
 currdir="$PWD"
 failed="false"
-alr_built="false"
+alr_built=''
 built="false"
 opts=()
 unset opts
@@ -85,8 +85,10 @@ srcdir="."
 currentdirname="${PWD##*/}"
 l=1
 depctr=0
+update=false
 
 # Shows the usage of amakesys
+# When called
 usage() 
 {
 	echo "Usage: amakesys [options] [target] ..."
@@ -109,13 +111,58 @@ usage()
 }
 
 # Options handling
-# Can't figure out how to use getopts
-case $1 in --prefix) prefix="$2"; opts+="--prefix "; ;; install) instopt="true"; opts+="install "; ;; clean) clsopt=true; opts+="clean "; ;; --debug) debug="echo \"Executing line: $((iteration+1))\""; opts+="--debug "; ;; -r) runopt=true; opts+="-r "; ;; -i) asmakefile="$2"; ;; -h|--help) usage ; ;; esac
-case $2 in --prefix) prefix="$3"; opts+="--prefix "; ;; install) instopt="true"; opts+="install "; ;; clean) clsopt=true; opts+="clean "; ;; --debug) debug="echo \"Executing line: $((iteration+1))\""; opts+="--debug "; ;; -r) runopt=true; opts+="-r "; ;; -i) asmakefile="$3"; ;; -h|--help) usage ; ;; esac
-case $3 in --prefix) prefix="$4"; opts+="--prefix "; ;; install) instopt="true"; opts+="install "; ;; clean) clsopt=true; opts+="clean "; ;; --debug) debug="echo \"Executing line: $((iteration+1))\""; opts+="--debug "; ;; -r) runopt=true; opts+="-r "; ;; -i) asmakefile="$4"; ;; -h|--help) usage ; ;; esac
-case $4 in --prefix) prefix="$5"; opts+="--prefix "; ;; install) instopt="true"; opts+="install "; ;; clean) clsopt=true; opts+="clean "; ;; --debug) debug="echo \"Executing line: $((iteration+1))\""; opts+="--debug "; ;; -r) runopt=true; opts+="-r "; ;; -i) asmakefile="$5"; ;; -h|--help) usage ; ;; esac
-case $5 in --prefix) prefix="$6"; opts+="--prefix "; ;; install) instopt="true"; opts+="install "; ;; clean) clsopt=true; opts+="clean "; ;; --debug) debug="echo \"Executing line: $((iteration+1))\""; opts+="--debug "; ;; -r) runopt=true; opts+="-r "; ;; -i) asmakefile="$6"; ;; -h|--help) usage ; ;; esac
-case $6 in --prefix) prefix="$7"; opts+="--prefix "; ;; install) instopt="true"; opts+="install "; ;; clean) clsopt=true; opts+="clean "; ;; --debug) debug="echo \"Executing line: $((iteration+1))\""; opts+="--debug "; ;; -r) runopt=true; opts+="-r "; ;; -i) asmakefile="$7"; ;; -h|--help) usage ; ;; esac
+
+for arg in "$@"; do
+  shift
+  case "$arg" in
+    "--help") set -- "$@" "-h" ;;
+    "--prefix") set -- "$@" "-p" ;;
+    "install")   set -- "$@" "-o" ;;
+    "clean") set -- "$@" "-c";;
+    "--debug") set -- "$@" "-d";;
+    "update") set -- "$@" "-u";;
+    *)        set -- "$@" "$arg"
+  esac
+done
+
+OPTIND=1
+while getopts "p:ocdrihu" o; do
+case $o in
+		p)
+		prefix="$OPTARG"
+		opts+="--prefix "
+		;;
+		
+		o)
+		instopt="true"
+		opts+="install "
+		;;
+		
+		c)
+		clsopt=true
+		opts+="clean "
+		;;
+		
+		d)
+		debug="echo \"Executing line: $((iteration+1))\""
+		opts+="--debug "
+		;;
+	
+		r)
+		runopt=true
+		opts+="-r "
+		;;
+		
+		i) asmakefile="$OPTARG" ;;
+		u) update="true" ;;
+		h) usage ;;
+		*)
+		echo "Option not found"
+		usage
+		;;
+	esac
+done
+shift $(expr $OPTIND - 1)
 # gets a string inside first matching brackets
 get_brc() 
 {
@@ -353,9 +400,13 @@ echo "${fgYellow8}${txBold}Current target: $project${txReset}"
 # If amakesys encounters a executable the same name of the project then
 # it prints that its already built
 # And it declares a already_built (alr_built) variable
-if [ -f build/$bindir/$project ]; then
-	echo "${fgBlue8}${txBold}Target $project already built${txReset}"
-	alr_built="true"
+if [[ $update != true ]]; then
+	if [ -f build/$bindir/$project ]; then
+		echo "${fgBlue8}${txBold}Target $project already built${txReset}"
+		alr_built="true"
+	else
+		alr_built="false"
+	fi
 fi
 
 # Declare some functions used when compiling
@@ -432,8 +483,12 @@ if [ "$clsopt" != "true" ] && [ "$instopt" != "true" ] && [ "$alr_built" != "tru
 		curcomp=$( get_obj )
 		
 		# If objects are already found amakesys skips them
-		if [ -f "build/objs/${sources[$i]}.o" ]; then
-			cmp="false"
+		if [[ $update != "true" ]]; then
+			if [ -f "build/objs/${sources[$i]}.o" ]; then
+				cmp="false"
+			else
+				cmp="true"
+			fi
 		else
 			cmp="true"
 		fi
@@ -534,7 +589,7 @@ if [ "$clsopt" != "true" ] && [ "$instopt" != "true" ] && [ "$alr_built" != "tru
 fi
 
 # Checks if it was successfully built
-if [ -f build/bin/$project ] && [ $alr_built != "true" ]; then
+if [ -f build/bin/$project ] && [ "$alr_built" != "true" ]; then
 	built="true"
 fi
 
