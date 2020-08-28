@@ -128,33 +128,20 @@ done
 OPTIND=1
 while getopts "p:ocdrihu" o; do
 case $o in
-		p)
-		prefix="$OPTARG"
-		opts+="--prefix "
-		;;
-		
-		o)
-		instopt="true"
-		opts+="install "
-		;;
-		
-		c)
-		clsopt=true
-		opts+="clean "
-		;;
-		
-		d)
-		debug="echo \"Executing line: $((iteration+1))\""
-		opts+="--debug "
-		;;
-	
-		r)
-		runopt=true
-		opts+="-r "
-		;;
-		
+		p) prefix="$OPTARG" 
+		   opts+="--prefix " ;;
+		o) instopt="true"
+		   opts+="install " ;;
+		c) clsopt=true
+		   opts+="clean " ;;
+		d) debug="echo \"Executing line: $iteration\""
+		   opts+="--debug ";;
+		r) runopt=true
+		   opts+="-r " ;;
 		i) asmakefile="$OPTARG" ;;
-		u) update="true" ;;
+		   opts+="-i "
+		u) update="true" 
+		   opts+="-u ";;
 		h) usage ;;
 		*)
 		echo "Option not found"
