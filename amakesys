@@ -63,7 +63,8 @@ prefix="/usr/local"
 arrnum=0
 bindir="bin"
 link="cpp"
-cppcomp="true"
+cppcomp="false"
+ccomp="false"
 iteration=0
 debug=":"
 pctr=0
@@ -272,11 +273,12 @@ while IFS= read -r line; do
 			install=$( get_brc )
 			eval $debug
 		;;
-		comp_c=*|comp_c*)
+		comp_cc=*|comp_cc*)
 			ccomp=$( get_brc )
 			eval $debug
 		;;
 		comp_cpp=*|comp_cpp*)
+			echo
 			cppcomp=$( get_brc )
 			eval $debug
 		;;
@@ -290,12 +292,12 @@ while IFS= read -r line; do
 			link=$( get_brc )
 			eval $debug
 		;;
-		print*|print=*)
+		print*)
 			print[$pctr]=$( get_brc )
 			pctr=$((pctr+1))
 			eval $debug
 		;;
-		target*|target=*)
+		target*)
 			config="false"
 			export config
 			target=$( get_brc )
@@ -340,7 +342,7 @@ while IFS= read -r line; do
 			exccmd=$( get_brc )
 			eval "$exccmd"
 		;;
-		add_dep*|add_dependency*)
+		add_dep*)
 			deps[$depctr]="$( get_brc )"
 			((depctr++))
 			eval $debug

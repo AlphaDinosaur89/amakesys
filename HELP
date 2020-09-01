@@ -23,7 +23,7 @@ Defines the binary dir
 install(install)
 true to enable amakesys install
 
-comp_c(ccomp)
+comp_cc(ccomp)
 true to enable gcc to compile c sources
 
 comp_cpp(cppcomp)
@@ -31,7 +31,6 @@ true to enable g++ to compile c++ sources
 
 add_source(source)
 Adds a source file to compile.
-Supported prefixes .cpp .c (more will be added)
 
 link_with(link)
 Links with g++ or gcc.
@@ -50,6 +49,13 @@ Ran when its read
 
 exec_command(command)
 Executes an command when its read
+
+add_dep(path)
+Adds a dependency that the linker accepts
+And when clean is called the dependency is not removed
+
+shared()
+Creates a shared library
 
 #
 Comment
