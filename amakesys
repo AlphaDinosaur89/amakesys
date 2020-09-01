@@ -86,6 +86,7 @@ currentdirname="${PWD##*/}"
 l=1
 depctr=0
 update=false
+shared=false
 
 # Shows the usage of amakesys
 # When called
@@ -101,11 +102,12 @@ usage()
 	echo "(does not work properly)"
 	echo "	-r 			Creates a run script"
 	echo "	-i [FILE]		Uses FILE as a ASMakefile"
+	echo "	update			Overwrites the objects files and binaries"
 	echo "	-h --help		Prints this and exits"
 	echo
 	echo "amakesys A really simple build system"
 	echo "Reads ASMakefiles and builds cpp/c sources with g++ and gcc"
-	echo "Prefixes supported: .c .cpp "
+	echo "Prefixes supported: .c .cpp .C .cxx .c++ .cc"
 	echo "Not tested with precompiled headers"
 	exit 0
 }
@@ -138,8 +140,8 @@ case $o in
 		   opts+="--debug ";;
 		r) runopt=true
 		   opts+="-r " ;;
-		i) asmakefile="$OPTARG" ;;
-		   opts+="-i "
+		i) asmakefile="$OPTARG"
+		   opts+="-i " ;;
 		u) update="true" 
 		   opts+="-u ";;
 		h) usage ;;
@@ -304,9 +306,13 @@ while IFS= read -r line; do
 		;;
 		all_cpp_sources*)
 			sctr=0
-			ftype="cpp"
 			cd $srcdir
-			cppfiles=$(ls -1R *.${ftype} 2> /dev/null)
+			cppfiles=$(ls -1R *.cpp 2> /dev/null)
+			cppfiles+=" $(ls -1R *.C 2> /dev/null)"
+			cppfiles+=" $(ls -1R *.CPP 2> /dev/null)"
+			cppfiles+=" $(ls -1R *.c++ 2> /dev/null)"
+			cppfiles+=" $(ls -1R *.cp 2> /dev/null)"
+			cppfiles+=" $(ls -1R *.cxx 2> /dev/null)"
 			fileslns=$(echo "$cppfiles" | wc -l)
 			cppfiles=(${cppfiles[$*]})
 			for ((i=0;i<fileslns;i++)); do
@@ -338,6 +344,11 @@ while IFS= read -r line; do
 			deps[$depctr]="$( get_brc )"
 			((depctr++))
 			eval $debug
+		;;
+		shared*)
+			cpp_flags+=" -fPIC"
+			cc_flags+=" -fPIC"
+			ld_flags+=" -shared"
 		;;
 		\#*)
 			:
@@ -399,8 +410,16 @@ fi
 # Declare some functions used when compiling
 get_obj() {
 	case ${sources[$ctr]} in
-		*.cpp)
+		*.cpp|*.cxx|*.c++)
 		local sources[$ctr]=${sources[$ctr]::-4}
+		;;
+		
+		*.C)
+		local sources[$ctr]=${sources[$ctr]::-2}
+		;;
+		
+		*.cc)
+		local sources[$ctr]=${sources[$ctr]::-3}
 		;;
 		
 		*.c)
@@ -419,7 +438,7 @@ rm_o() {
 }
 get_tobj() {
 	case ${sources[$i]} in
-		*.cpp)
+		*.cpp|*.C|*.cc|*.cxx|*.c++)
 		local sources[$i]="${sources[$i]}.o "
 		;;
 		
@@ -482,7 +501,7 @@ if [ "$clsopt" != "true" ] && [ "$instopt" != "true" ] && [ "$alr_built" != "tru
 
 		# Declares the current c source or c++ source
 		case "${sources[$ctr]}" in 
-			*.cpp)
+			*.cpp|*.C|*.cc|*.cxx|*.c++)
 			cxxsrc="${sources[$ctr]}"
 			;;
 			
@@ -510,7 +529,7 @@ if [ "$clsopt" != "true" ] && [ "$instopt" != "true" ] && [ "$alr_built" != "tru
 				failed
 			fi
 		fi
-		if [ "$cppcomp" == "true" ] && [ "${sources[$ctr]}" == "$curcomp.cpp" ]; then
+		if [ "$cppcomp" == "true" ] && [ "${sources[$ctr]}" == "$curcomp.cpp" ] || [ "${sources[$ctr]}" == "$curcomp.C" ] || [ "${sources[$ctr]}" == "$curcomp.cc" ] ||[ "${sources[$ctr]}" == "$curcomp.cxx" ] || [ "${sources[$ctr]}" == "$curcomp.c++" ]; then
 			 echo "${txBold}${fgBlue8}\$(CXX)${txReset} ${txBold}${fgYellow8}Compiling with:${txReset} ${txBold}${fgGreen8}$allcxxflags${txReset}"
 			 echo
 			if eval "$CXX $allcxxflags"; then
@@ -713,7 +732,7 @@ if [[ $clsopt == "true" ]]; then
 fi
 
 		#################################
-		#     CREATE A run SCRIPT   	 #
+		#     CREATE A run SCRIPT   	#
 		#################################
 
 # If amakesys -r is ran then it executes this bit
@@ -752,6 +771,7 @@ asmakefile="$target"
 export asmakefile
 
 # Runs amakesys -i TARGETNAME
+# And the options used to run amakesys
 eval $runtarget
 
 # Exits with a state of 0
