@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+amakesysdir="${PWD##*/}"
+
+echo "amakesys uninstall script"
+echo "Press any key to continue"
+echo "Press Ctrl+C to cancel"
+read -rsn 1
+
+if [ -f /usr/bin/amakesys ]; then
+	sudo rm -rf /usr/bin/amakesys
+fi
+cd ..
+rm -rf $amakesysdir
