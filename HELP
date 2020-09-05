@@ -57,5 +57,16 @@ And when clean is called the dependency is not removed
 shared()
 Creates a shared library
 
+ifeq [VARIABLE] [STRING]
+If the variable is equals a the string then the code inside the ifeq statement left there or
+else the code is deleted.
+Example:
+
+ifeq var true
+add_source(foo.cpp)
+exec_command(rm bar.tmp)
+} <----- Closes the ifeq statement.
+Make sure to include those
+
 #
 Comment
