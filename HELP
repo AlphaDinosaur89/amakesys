@@ -57,16 +57,20 @@ And when clean is called the dependency is not removed
 shared()
 Creates a shared library
 
-ifeq [VARIABLE] [STRING]
+ifeq [VARIABLE] [STRING/VARIABLE] (You might need to export the variable)
 If the variable is equals a the string then the code inside the ifeq statement left there or
 else the code is deleted.
 Example:
 
-ifeq var true
+ifeq var true (tabs not allowed)
 add_source(foo.cpp)
 exec_command(rm bar.tmp)
-} <----- Closes the ifeq statement.
+end; <----- Closes the ifeq statement.
 Make sure to include those
+Nested ifeq statements work but might have issues
+
+ifnoteq [VARIABLE] [STRING/VARIABLE] (You might need to export the variable)
+Like ifeq but only executes the code if the variable is not equal
 
 #
 Comment
