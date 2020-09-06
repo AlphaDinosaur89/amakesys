@@ -175,6 +175,13 @@ ifeq()
 	str="$2"
 	str=$( echo $str | tr -d '\r\n' )
 }
+# Gets the values for the ifnoteq
+ifnoteq()
+{
+	cpr="$1"
+	str="$2"
+	str=$( echo $str | tr -d '\r\n' )
+}
 
 if [[ $config != "false" ]]; then
 
@@ -248,69 +255,69 @@ while IFS= read -r line; do
 	iteration=$((iteration+1))
 	case $line in
 		project=*|project*)
-			if [[ $ifeq != true ]]; then
+			if [[ $if != true ]]; then
 			project=$( get_brc )
 			eval $debug
 			fi
 		;;
 		version=*|version*)
-			if [[ $ifeq != true ]]; then
+			if [[ $if != true ]]; then
 			version=$( get_brc )
 			eval $debug
 			fi
 		;;
 		cc_flags=*|cc_flags*)
-			if [[ $ifeq != true ]]; then
+			if [[ $if != true ]]; then
 			cc_flags=$( get_brc )
 			eval $debug
 			fi
 		;;
 		cpp_flags=*|cpp_flags*)
-			if [[ $ifeq != true ]]; then
+			if [[ $if != true ]]; then
 			cpp_flags=$( get_brc )
 			eval $debug
 			fi
 		;;
 		linker_flags=*|linker_flags*)
-			if [[ $ifeq != true ]]; then
+			if [[ $if != true ]]; then
 			ld_flags=$( get_brc )
 			eval $debug
 			fi
 		;;
 		source_dir=*|source_dir*)
-			if [[ $ifeq != true ]]; then
+			if [[ $if != true ]]; then
 			srcdir=$( get_brc )
 			[ -d $srcdir ] || fail "Source directory $srcdir not found"
 			eval $debug
 			fi
 		;;
 		bin_dir=*|bin_dir*|bindir*)
-			if [[ $ifeq != true ]]; then
+			if [[ $if != true ]]; then
 			bindir=$( get_brc )
 			eval $debug
 			fi
 		;;
 		install=*|install*)
-			if [[ $ifeq != true ]]; then
+			if [[ $if != true ]]; then
 			install=$( get_brc )
 			eval $debug
 			fi
 		;;
 		comp_cc=*|comp_cc*)
-			if [[ $ifeq != true ]]; then
+			if [[ $if != true ]]; then
 			ccomp=$( get_brc )
 			eval $debug
 			fi
 		;;
 		comp_cpp=*|comp_cpp*)
-			if [[ $ifeq != true ]]; then
+			if [[ $if != true ]]; then
 			echo
 			cppcomp=$( get_brc )
 			eval $debug
 			fi
 		;;
 		add_source=*|add_source*)
-			if [[ $ifeq != true ]]; then
+			if [[ $if != true ]]; then
 			sources[$arrnum]=$( get_brc )
 			[ -f $srcdir/${sources[$arrnum]} ] || fail "Couldnt find ${sources[$arrnum]} source file"
 			arrnum=$((arrnum+1))
@@ -318,20 +325,20 @@ while IFS= read -r line; do
 			fi
 		;;
 		link_with=*|link_with*)
-			if [[ $ifeq != true ]]; then
+			if [[ $if != true ]]; then
 			link=$( get_brc )
 			eval $debug
 			fi
 		;;
 		print*)
-			if [[ $ifeq != true ]]; then
+			if [[ $if != true ]]; then
 			print[$pctr]=$( get_brc )
 			pctr=$((pctr+1))
 			eval $debug
 			fi
 		;;
 		target*)
-			if [[ $ifeq != true ]]; then
+			if [[ $if != true ]]; then
 			config="false"
 			export config
 			target=$( get_brc )
@@ -342,7 +349,7 @@ while IFS= read -r line; do
 			fi
 		;;
 		all_cpp_sources*)
-			if [[ $ifeq != true ]]; then
+			if [[ $if != true ]]; then
 			sctr=0
 			cd $srcdir
 			cppfiles=$(ls -1R *.cpp 2> /dev/null)
@@ -362,7 +369,7 @@ while IFS= read -r line; do
 			fi
 		;;
 		all_c_sources*)
-			if [[ $ifeq != true ]]; then
+			if [[ $if != true ]]; then
 			sctr=0
 			ftype="c"
 			cd $srcdir
@@ -378,21 +385,21 @@ while IFS= read -r line; do
 			fi
 		;;
 		exec_command*|exec_comand=*)
-			if [[ $ifeq != true ]]; then
+			if [[ $if != true ]]; then
 			exccmd=$( get_brc )
 			eval "$exccmd"
 			eval "$debug"
 			fi
 		;;
 		add_dep*)
-			if [[ $ifeq != true ]]; then
+			if [[ $if != true ]]; then
 			deps[$depctr]="$( get_brc )"
 			((depctr++))
 			eval $debug
 			fi
 		;;
 		shared*)
-			if [[ $ifeq != true ]]; then
+			if [[ $if != true ]]; then
 			cpp_flags+=" -fPIC"
 			cc_flags+=" -fPIC"
 			ld_flags+=" -shared"
@@ -401,22 +408,51 @@ while IFS= read -r line; do
 		ifeq*)
 			ifqctr=$iteraction
 			eval "$line"
+			
 			if [[ "${!cpr}" == "$str" ]]; then
-				ifeq=false
+				if=false
 				sed -i "$iteration d" "$asmakefile.tmp"
 				while IFS= read -r lin; do
-   					if [[ $lin != "}" ]]; then
+   					if [[ $lin != end\;* ]]; then
    						:
     					else
     						break
     					fi
 				done < <(tail -n "+$((iteration+1))" $asmakefile.tmp)
 			else
-				ifeq=true
+				if=true
 				sed -i "$iteration d" "$asmakefile.tmp"
 				lineno=$((iteration))
 				while IFS= read -r lin; do
-					if [[ $lin != }* ]]; then
+					if [[ $lin != end\;* ]]; then
+						sed -i "$lineno d" "$asmakefile.tmp"
+					else
+						sed -i "$lineno d" "$asmakefile.tmp"
+						break
+					fi
+				done < <(tail -n "+$iteration" $asmakefile.tmp)
+			fi
+		;;
+		ifnoteq*)
+			ifqctr=$iteraction
+			eval "$line"
+			
+			if [[ "${!cpr}" != "$str" ]]; then
+				if=false
+				sed -i "$iteration d" "$asmakefile.tmp"
+				while IFS= read -r lin; do
+   					if [[ $lin != end\;* ]]; then
+   						:
+    					else
+    						break
+    					fi
+				done < <(tail -n "+$((iteration+1))" $asmakefile.tmp)
+			else
+				if=true
+				sed -i "$iteration d" "$asmakefile.tmp"
+				lineno=$((iteration))
+				while IFS= read -r lin; do
+					if [[ $lin != end\;* ]]; then
 						sed -i "$lineno d" "$asmakefile.tmp"
 					else
 						sed -i "$lineno d" "$asmakefile.tmp"
@@ -428,7 +464,7 @@ while IFS= read -r line; do
 		\#*)
 			:
 		;;
-		\}*)
+		\end\;*)
 			:
 		;;
 		*)
@@ -441,7 +477,7 @@ while IFS= read -r line; do
 	esac
 done < "$asmakefile.tmp"
 # Removes the ASMakefile.tmp after reading
-#sudo rm -rf $asmakefile.tmp
+sudo rm -rf $asmakefile.tmp
 sudo rm -rf $asmakefile.tmp.tmp
 
 if [[ $project == "" ]]; then
