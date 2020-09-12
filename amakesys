@@ -104,7 +104,6 @@ usage()
 	echo "	-r 			Creates a run script"
 	echo "	-i [FILE]		Uses FILE as a ASMakefile"
 	echo "	update			Overwrites the objects files and binaries"
-	echo "  --logs			creates a \$asmakefile.log"
 	echo "	-h --help		Prints this and exits"
 	echo
 	echo "amakesys A really simple build system"
@@ -125,7 +124,6 @@ for arg in "$@"; do
     "clean") set -- "$@" "-c";;
     "--debug") set -- "$@" "-d";;
     "update") set -- "$@" "-u";;
-    "--logs") set -- "$@" "-l";;
     *)        set -- "$@" "$arg"
   esac
 done
@@ -147,8 +145,6 @@ case $o in
 		   opts+="-i $OPTARG " ;;
 		u) update="true" 
 		   opts+="-u ";;
-		l) logs="true"
-		   opts+="-l ";;
 		h) usage ;;
 		*)
 		echo "Option not found"
@@ -195,7 +191,6 @@ echo "Made by: Alphadinosaur89"
 if [[ -f $asmakefile ]]; then
 	echo "ASMakefile found"
 	echo "Making some checks. . ."
-	mkfiledir="$PWD"
 else
 	echo "ASMakefile not found"
 	echo "Exiting. . ."
@@ -244,7 +239,6 @@ else # if [[ $config != "false" ]]; then
 	if [[ -f $asmakefile ]]; then # Checks for the next target
 		echo "${fgMagenta8}${txBold}Next target found${txReset}"
 		echo "${fgBlue8}${txBold}Building. . .${txReset}"
-		mkfiledir="$PWD"
 	fi	
 fi
 
@@ -261,13 +255,6 @@ while IFS= read -r line; do
 		project=*|project*)
 			if [[ $if != true ]]; then
 			project=$( get_brc )
-			eval $debug
-			fi
-			if=false
-		;;
-		version=*|version*)
-			if [[ $if != true ]]; then
-			version=$( get_brc )
 			eval $debug
 			fi
 			if=false
@@ -914,7 +901,6 @@ eval $runtarget
 
 # Exits with a state of 0
 exit 0
-
 
 
 
