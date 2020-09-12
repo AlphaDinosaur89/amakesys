@@ -104,11 +104,12 @@ usage()
 	echo "	-r 			Creates a run script"
 	echo "	-i [FILE]		Uses FILE as a ASMakefile"
 	echo "	update			Overwrites the objects files and binaries"
+	echo "  --logs			creates a \$asmakefile.log"
 	echo "	-h --help		Prints this and exits"
 	echo
 	echo "amakesys A really simple build system"
 	echo "Reads ASMakefiles and builds cpp/c sources with g++ and gcc"
-	echo "Prefixes supported: .c .cpp .C .cxx .c++ .cc"
+	echo "Extensions supported: .c .cpp .C .cxx .c++ .cc"
 	echo "Not tested with precompiled headers"
 	exit 0
 }
@@ -124,12 +125,13 @@ for arg in "$@"; do
     "clean") set -- "$@" "-c";;
     "--debug") set -- "$@" "-d";;
     "update") set -- "$@" "-u";;
+    "--logs") set -- "$@" "-l";;
     *)        set -- "$@" "$arg"
   esac
 done
 
 OPTIND=1
-while getopts "p:ocdri:hu" o; do
+while getopts "p:ocdri:hul" o; do
 case $o in
 		p) prefix="$OPTARG" 
 		   opts+="--prefix $OPTARG " ;;
@@ -145,6 +147,8 @@ case $o in
 		   opts+="-i $OPTARG " ;;
 		u) update="true" 
 		   opts+="-u ";;
+		l) logs="true"
+		   opts+="-l ";;
 		h) usage ;;
 		*)
 		echo "Option not found"
@@ -175,7 +179,7 @@ ifeq()
 	str="$2"
 	str=$( echo $str | tr -d '\r\n' )
 }
-# Gets the values for the ifnoteq
+# Gets the values for the ifnoteq statement and so on
 ifnoteq()
 {
 	cpr="$1"
@@ -259,30 +263,35 @@ while IFS= read -r line; do
 			project=$( get_brc )
 			eval $debug
 			fi
+			if=false
 		;;
 		version=*|version*)
 			if [[ $if != true ]]; then
 			version=$( get_brc )
 			eval $debug
 			fi
+			if=false
 		;;
 		cc_flags=*|cc_flags*)
 			if [[ $if != true ]]; then
 			cc_flags=$( get_brc )
 			eval $debug
 			fi
+			if=false
 		;;
 		cpp_flags=*|cpp_flags*)
 			if [[ $if != true ]]; then
 			cpp_flags=$( get_brc )
 			eval $debug
 			fi
+			if=false
 		;;
 		linker_flags=*|linker_flags*)
 			if [[ $if != true ]]; then
 			ld_flags=$( get_brc )
 			eval $debug
 			fi
+			if=false
 		;;
 		source_dir=*|source_dir*)
 			if [[ $if != true ]]; then
@@ -290,24 +299,28 @@ while IFS= read -r line; do
 			[ -d $srcdir ] || fail "Source directory $srcdir not found"
 			eval $debug
 			fi
+			if=false
 		;;
 		bin_dir=*|bin_dir*|bindir*)
 			if [[ $if != true ]]; then
 			bindir=$( get_brc )
 			eval $debug
 			fi
+			if=false
 		;;
 		install=*|install*)
 			if [[ $if != true ]]; then
 			install=$( get_brc )
 			eval $debug
 			fi
+			if=false
 		;;
 		comp_cc=*|comp_cc*)
 			if [[ $if != true ]]; then
 			ccomp=$( get_brc )
 			eval $debug
 			fi
+			if=false
 		;;
 		comp_cpp=*|comp_cpp*)
 			if [[ $if != true ]]; then
@@ -315,6 +328,7 @@ while IFS= read -r line; do
 			cppcomp=$( get_brc )
 			eval $debug
 			fi
+			if=false
 		;;
 		add_source=*|add_source*)
 			if [[ $if != true ]]; then
@@ -323,12 +337,14 @@ while IFS= read -r line; do
 			arrnum=$((arrnum+1))
 			eval $debug
 			fi
+			if=false
 		;;
 		link_with=*|link_with*)
 			if [[ $if != true ]]; then
 			link=$( get_brc )
 			eval $debug
 			fi
+			if=false
 		;;
 		print*)
 			if [[ $if != true ]]; then
@@ -336,6 +352,7 @@ while IFS= read -r line; do
 			pctr=$((pctr+1))
 			eval $debug
 			fi
+			if=false
 		;;
 		target*)
 			if [[ $if != true ]]; then
@@ -347,6 +364,7 @@ while IFS= read -r line; do
 			export opts
 			eval $debug
 			fi
+			if=false
 		;;
 		all_cpp_sources*)
 			if [[ $if != true ]]; then
@@ -367,6 +385,7 @@ while IFS= read -r line; do
 			done
 			cd $currdir
 			fi
+			if=false
 		;;
 		all_c_sources*)
 			if [[ $if != true ]]; then
@@ -383,6 +402,7 @@ while IFS= read -r line; do
 			done
 			cd $currdir
 			fi
+			if=false
 		;;
 		exec_command*|exec_comand=*)
 			if [[ $if != true ]]; then
@@ -390,6 +410,7 @@ while IFS= read -r line; do
 			eval "$exccmd"
 			eval "$debug"
 			fi
+			if=false
 		;;
 		add_dep*)
 			if [[ $if != true ]]; then
@@ -397,6 +418,7 @@ while IFS= read -r line; do
 			((depctr++))
 			eval $debug
 			fi
+			if=false
 		;;
 		shared*)
 			if [[ $if != true ]]; then
@@ -404,9 +426,9 @@ while IFS= read -r line; do
 			cc_flags+=" -fPIC"
 			ld_flags+=" -shared"
 			fi
+			if=false
 		;;
 		ifeq*)
-			ifqctr=$iteraction
 			eval "$line"
 			
 			if [[ "${!cpr}" == "$str" ]]; then
@@ -434,7 +456,6 @@ while IFS= read -r line; do
 			fi
 		;;
 		ifnoteq*)
-			ifqctr=$iteraction
 			eval "$line"
 			
 			if [[ "${!cpr}" != "$str" ]]; then
@@ -450,12 +471,11 @@ while IFS= read -r line; do
 			else
 				if=true
 				sed -i "$iteration d" "$asmakefile.tmp"
-				lineno=$((iteration))
 				while IFS= read -r lin; do
 					if [[ $lin != end\;* ]]; then
-						sed -i "$lineno d" "$asmakefile.tmp"
+						sed -i "$iteration d" "$asmakefile.tmp"
 					else
-						sed -i "$lineno d" "$asmakefile.tmp"
+						sed -i "$iteration d" "$asmakefile.tmp"
 						break
 					fi
 				done < <(tail -n "+$iteration" $asmakefile.tmp)
@@ -595,12 +615,17 @@ done
 		########################
 		#    BUILD AND LINK    #
 		########################
-		
+	
+counter=0	
 i=0
 if [ "$clsopt" != "true" ] && [ "$instopt" != "true" ] && [ "$alr_built" != "true" ]; then
 	while (( $i < ${#sources[*]} )); do
 		building="true"
 		curcomp=$( get_obj )
+		
+		num_srcs=${#sources[*]}
+		step=$((100/$num_srcs))
+		((counter+=step))
 		
 		# If objects are already found amakesys skips them
 		if [[ $update != "true" ]]; then
@@ -635,7 +660,7 @@ if [ "$clsopt" != "true" ] && [ "$instopt" != "true" ] && [ "$alr_built" != "tru
 		fi	
 		
 		if [[ "$ccomp" == "true" ]] && [[ ${sources[$ctr]} == "$curcomp.c" ]]; then
-			 echo "${txBold}${fgBlue8}\$(CC)${txReset} ${txBold}${fgYellow8}Compiling with:${txReset} ${txBold}${fgGreen8}$allccflags${txReset}"
+			 echo -e "${fgLightGray}[ %$counter ] ${txBold}${fgBlue8}\$(CC)${txReset} ${txBold}${fgYellow8}Compiling with:${txReset} ${txBold}${fgGreen8}$allccflags${txReset}"
 			 echo
 			if eval "$CC $allccflags"; then
 				ok
@@ -644,7 +669,7 @@ if [ "$clsopt" != "true" ] && [ "$instopt" != "true" ] && [ "$alr_built" != "tru
 			fi
 		fi
 		if [ "$cppcomp" == "true" ] && [ "${sources[$ctr]}" == "$curcomp.cpp" ] || [ "${sources[$ctr]}" == "$curcomp.C" ] || [ "${sources[$ctr]}" == "$curcomp.cc" ] ||[ "${sources[$ctr]}" == "$curcomp.cxx" ] || [ "${sources[$ctr]}" == "$curcomp.c++" ]; then
-			 echo "${txBold}${fgBlue8}\$(CXX)${txReset} ${txBold}${fgYellow8}Compiling with:${txReset} ${txBold}${fgGreen8}$allcxxflags${txReset}"
+			 echo -e "${fgLightGray}[ %$counter ] ${txBold}${fgBlue8}\$(CXX)${txReset} ${txBold}${fgYellow8}Compiling with:${txReset} ${txBold}${fgGreen8}$allcxxflags${txReset}"
 			 echo
 			if eval "$CXX $allcxxflags"; then
 				ok
