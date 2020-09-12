@@ -762,7 +762,6 @@ if [[ $instopt == "true" ]]; then
 		# The directory must exist
 		if sudo cp ./$project $prefix/bin/; then
 			echo "${txBold}${fgGreen8}Installation Sucessful${txReset}"
-			installed=true
 		else
 			echo "${txBold}${fgRed8}Installation Failed${txReset}"
 		fi
