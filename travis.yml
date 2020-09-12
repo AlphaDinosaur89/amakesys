@@ -1,0 +1,9 @@
+language: bash
+
+sudo: false
+
+script:
+ - shellcheck amakesys
+
+matrix:
+  fast_finish: true
