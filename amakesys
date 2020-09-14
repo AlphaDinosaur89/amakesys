@@ -289,7 +289,6 @@ fi
 awk '{sub(/#.*$/,"")}1' $asmakefile > $asmakefile.tmp.tmp
 sed -r '/^\s*$/d' $asmakefile.tmp.tmp > $asmakefile.tmp.t
 awk '{$1=$1}1' $asmakefile.tmp.t > $asmakefile.tmp
-
 # Reads from $asmakefile.tmp
 # And parses the statements in it
 while IFS= read -r line; do
@@ -298,48 +297,59 @@ while IFS= read -r line; do
 		ifeq*)
 			eval "$line"
 			
-			if [[ "${!cpr}" == "$str" ]]; then
-				while IFS= read -r lin; do
-   					if [[ $lin != end\;* ]]; then
-   						:
-    					else
-    						break
-    					fi
-				done < <(tail -n "+$((iteration+1))" $asmakefile.tmp)
+			if [[ $prs_if != false ]]; then
+				if [[ "${!cpr}" == "$str" ]]; then
+					while IFS= read -r lin; do
+   						if [[ $lin != end\;* ]]; then
+   							:
+    						else
+    							break
+    						fi
+					done < <(tail -n "+$((iteration+1))" $asmakefile.tmp)
+				else
+					prs_if=false
+					sed -i "$iteration d" "$asmakefile.tmp"
+					lineno=$((iteration))
+					while IFS= read -r lin; do
+						if [[ $lin != end\;* ]]; then
+							sed -i "$lineno d" "$asmakefile.tmp"
+						else
+							sed -i "$lineno d" "$asmakefile.tmp"
+							break
+						fi
+					done < <(tail -n "+$iteration" $asmakefile.tmp)
+				fi
 			else
-				sed -i "$iteration d" "$asmakefile.tmp"
-				lineno=$((iteration))
-				while IFS= read -r lin; do
-					if [[ $lin != end\;* ]]; then
-						sed -i "$lineno d" "$asmakefile.tmp"
-					else
-						sed -i "$lineno d" "$asmakefile.tmp"
-						break
-					fi
-				done < <(tail -n "+$iteration" $asmakefile.tmp)
+				prs_if=
 			fi
 		;;
 		ifnoteq*)
 			eval "$line"
 			
-			if [[ "${!cpr}" != "$str" ]]; then
-				while IFS= read -r lin; do
-   					if [[ $lin != end\;* ]]; then
-   						:
-    					else
-    						break
-    					fi
-				done < <(tail -n "+$((iteration+1))" $asmakefile.tmp)
+			if [[ $prs_if != false ]]; then
+				if [[ "${!cpr}" != "$str" ]]; then
+					while IFS= read -r lin; do
+   						if [[ $lin != end\;* ]]; then
+   							:
+    						else
+    							break
+    						fi
+					done < <(tail -n "+$((iteration+1))" $asmakefile.tmp)
+				else
+					prs_if=false
+					sed -i "$iteration d" "$asmakefile.tmp"
+					lineno=$((iteration))
+					while IFS= read -r lin; do
+						if [[ $lin != end\;* ]]; then
+							sed -i "$lineno d" "$asmakefile.tmp"
+						else
+							sed -i "$lineno d" "$asmakefile.tmp"
+							break
+						fi
+					done < <(tail -n "+$iteration" $asmakefile.tmp)
+				fi
 			else
-				sed -i "$iteration d" "$asmakefile.tmp"
-				while IFS= read -r lin; do
-					if [[ $lin != end\;* ]]; then
-						sed -i "$iteration d" "$asmakefile.tmp"
-					else
-						sed -i "$iteration d" "$asmakefile.tmp"
-						break
-					fi
-				done < <(tail -n "+$iteration" $asmakefile.tmp)
+				prs_if=
 			fi
 		;;
 		
@@ -417,38 +427,6 @@ while IFS= read -r line; do
 			runtarget="amakesys ${opts[*]} -i $target"
 			export "${opts[@]}"
 			eval $debug
-		;;
-		all_cpp_sources*)
-			sctr=0
-			cd $srcdir || fail cd failed
-			cppfiles=$(ls -1R *.cpp 2> /dev/null)
-			cppfiles+=" $(ls -1R *.C 2> /dev/null)"
-			cppfiles+=" $(ls -1R *.CPP 2> /dev/null)"
-			cppfiles+=" $(ls -1R *.c++ 2> /dev/null)"
-			cppfiles+=" $(ls -1R *.cp 2> /dev/null)"
-			cppfiles+=" $(ls -1R *.cxx 2> /dev/null)"
-			fileslns=$(echo "$cppfiles" | wc -l)
-			cppfiles=("${cppfiles[$*]}")
-			for ((i=0;i<fileslns;i++)); do
-				j="${cppfiles[$i]}"
-				sources[$sctr]="$j"
-				sctr=$((sctr+1))
-			done
-			cd $currdir || fail cd failed
-		;;
-		all_c_sources*)
-			sctr=0
-			ftype="c"
-			cd $srcdir || fail cd failed
-			cppfiles=("$(ls -1R *.${ftype} 2> /dev/null)")
-			fileslns=$(echo "${cppfiles[*]}" | wc -l)
-			cppfiles=("${cppfiles[$*]}")
-			for ((i=0;i<fileslns;i++)); do
-				j="${cppfiles[$i]}"
-				sources[$sctr]="$j"
-				sctr=$((sctr+1))
-			done
-			cd $currdir || fail cd failed
 		;;
 		exec_command*|exec_comand=*)
 			exccmd=$( get_brc )
