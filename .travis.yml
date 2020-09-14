@@ -3,7 +3,7 @@ language: bash
 sudo: false
 
 script:
- - shellcheck amakesys
+ - bash amakesys
 
 matrix:
   fast_finish: true
