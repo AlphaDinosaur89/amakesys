@@ -12,4 +12,4 @@ jobs:
   script: bash amakesys clean
 
 matrix:
-  fast_finish: true
+ fast_finish: true
