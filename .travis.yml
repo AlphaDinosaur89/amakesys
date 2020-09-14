@@ -3,13 +3,13 @@ language: bash
 sudo: false
 
 jobs:
- include:
-  - stage: test
-  script: bash amakesys
-  - stage: install
-  script: bash amakesys install
-  - stage: clean
-  script: bash amakesys clean
+	include:
+		- stage: test
+		  script: bash amakesys
+		- stage: install
+		  script: bash amakesys install
+		- stage: clean
+		  script: bash amakesys clean
 
 matrix:
- fast_finish: true
+  fast_finish: true
