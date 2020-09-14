@@ -244,183 +244,21 @@ fi
 
 # Remove all blank spaces from the ASMakefile,
 # Removes all comments
-# and creates a ASMakefile.tmp
+# Removes all spaces and tabs from the start of each line
+# and creates a $asmakefile.tmp
 awk '{sub(/#.*$/,"")}1' $asmakefile > $asmakefile.tmp.tmp
-sed -r '/^\s*$/d' $asmakefile.tmp.tmp > $asmakefile.tmp
-# Read ASMakefile
-# This acctually reads from the ASMakefile.tmp
+sed -r '/^\s*$/d' $asmakefile.tmp.tmp > $asmakefile.tmp.t
+awk '{$1=$1}1' $asmakefile.tmp.t > $asmakefile.tmp
+
+# Reads from $asmakefile.tmp
+# And parses the statements in it
 while IFS= read -r line; do
 	iteration=$((iteration+1))
 	case $line in
-		project=*|project*)
-			if [[ $if != true ]]; then
-			project=$( get_brc )
-			eval $debug
-			fi
-			if=false
-		;;
-		cc_flags=*|cc_flags*)
-			if [[ $if != true ]]; then
-			cc_flags=$( get_brc )
-			eval $debug
-			fi
-			if=false
-		;;
-		cpp_flags=*|cpp_flags*)
-			if [[ $if != true ]]; then
-			cpp_flags=$( get_brc )
-			eval $debug
-			fi
-			if=false
-		;;
-		linker_flags=*|linker_flags*)
-			if [[ $if != true ]]; then
-			ld_flags=$( get_brc )
-			eval $debug
-			fi
-			if=false
-		;;
-		source_dir=*|source_dir*)
-			if [[ $if != true ]]; then
-			srcdir=$( get_brc )
-			[ -d $srcdir ] || fail "Source directory $srcdir not found"
-			eval $debug
-			fi
-			if=false
-		;;
-		bin_dir=*|bin_dir*|bindir*)
-			if [[ $if != true ]]; then
-			bindir=$( get_brc )
-			eval $debug
-			fi
-			if=false
-		;;
-		install=*|install*)
-			if [[ $if != true ]]; then
-			install=$( get_brc )
-			eval $debug
-			fi
-			if=false
-		;;
-		comp_cc=*|comp_cc*)
-			if [[ $if != true ]]; then
-			ccomp=$( get_brc )
-			eval $debug
-			fi
-			if=false
-		;;
-		comp_cpp=*|comp_cpp*)
-			if [[ $if != true ]]; then
-			echo
-			cppcomp=$( get_brc )
-			eval $debug
-			fi
-			if=false
-		;;
-		add_source=*|add_source*)
-			if [[ $if != true ]]; then
-			sources[$arrnum]=$( get_brc )
-			[ -f $srcdir/${sources[$arrnum]} ] || fail "Couldnt find ${sources[$arrnum]} source file"
-			arrnum=$((arrnum+1))
-			eval $debug
-			fi
-			if=false
-		;;
-		link_with=*|link_with*)
-			if [[ $if != true ]]; then
-			link=$( get_brc )
-			eval $debug
-			fi
-			if=false
-		;;
-		print*)
-			if [[ $if != true ]]; then
-			print[$pctr]=$( get_brc )
-			pctr=$((pctr+1))
-			eval $debug
-			fi
-			if=false
-		;;
-		target*)
-			if [[ $if != true ]]; then
-			config="false"
-			export config
-			target=$( get_brc )
-			[ -f "$target" ] || fail "Couldnt find $target"
-			runtarget="amakesys $opts -i $target"
-			export opts
-			eval $debug
-			fi
-			if=false
-		;;
-		all_cpp_sources*)
-			if [[ $if != true ]]; then
-			sctr=0
-			cd $srcdir
-			cppfiles=$(ls -1R *.cpp 2> /dev/null)
-			cppfiles+=" $(ls -1R *.C 2> /dev/null)"
-			cppfiles+=" $(ls -1R *.CPP 2> /dev/null)"
-			cppfiles+=" $(ls -1R *.c++ 2> /dev/null)"
-			cppfiles+=" $(ls -1R *.cp 2> /dev/null)"
-			cppfiles+=" $(ls -1R *.cxx 2> /dev/null)"
-			fileslns=$(echo "$cppfiles" | wc -l)
-			cppfiles=(${cppfiles[$*]})
-			for ((i=0;i<fileslns;i++)); do
-				j="${cppfiles[$i]}"
-				sources[$sctr]="$j"
-				sctr=$((sctr+1))
-			done
-			cd $currdir
-			fi
-			if=false
-		;;
-		all_c_sources*)
-			if [[ $if != true ]]; then
-			sctr=0
-			ftype="c"
-			cd $srcdir
-			cppfiles=$(ls -1R *.${ftype} 2> /dev/null)
-			fileslns=$(echo "$cppfiles" | wc -l)
-			cppfiles=(${cppfiles[$*]})
-			for ((i=0;i<fileslns;i++)); do
-				j="${cppfiles[$i]}"
-				sources[$sctr]="$j"
-				sctr=$((sctr+1))
-			done
-			cd $currdir
-			fi
-			if=false
-		;;
-		exec_command*|exec_comand=*)
-			if [[ $if != true ]]; then
-			exccmd=$( get_brc )
-			eval "$exccmd"
-			eval "$debug"
-			fi
-			if=false
-		;;
-		add_dep*)
-			if [[ $if != true ]]; then
-			deps[$depctr]="$( get_brc )"
-			((depctr++))
-			eval $debug
-			fi
-			if=false
-		;;
-		shared*)
-			if [[ $if != true ]]; then
-			cpp_flags+=" -fPIC"
-			cc_flags+=" -fPIC"
-			ld_flags+=" -shared"
-			fi
-			if=false
-		;;
 		ifeq*)
 			eval "$line"
 			
 			if [[ "${!cpr}" == "$str" ]]; then
-				if=false
-				sed -i "$iteration d" "$asmakefile.tmp"
 				while IFS= read -r lin; do
    					if [[ $lin != end\;* ]]; then
    						:
@@ -429,7 +267,6 @@ while IFS= read -r line; do
     					fi
 				done < <(tail -n "+$((iteration+1))" $asmakefile.tmp)
 			else
-				if=true
 				sed -i "$iteration d" "$asmakefile.tmp"
 				lineno=$((iteration))
 				while IFS= read -r lin; do
@@ -446,8 +283,6 @@ while IFS= read -r line; do
 			eval "$line"
 			
 			if [[ "${!cpr}" != "$str" ]]; then
-				if=false
-				sed -i "$iteration d" "$asmakefile.tmp"
 				while IFS= read -r lin; do
    					if [[ $lin != end\;* ]]; then
    						:
@@ -456,7 +291,6 @@ while IFS= read -r line; do
     					fi
 				done < <(tail -n "+$((iteration+1))" $asmakefile.tmp)
 			else
-				if=true
 				sed -i "$iteration d" "$asmakefile.tmp"
 				while IFS= read -r lin; do
 					if [[ $lin != end\;* ]]; then
@@ -468,24 +302,158 @@ while IFS= read -r line; do
 				done < <(tail -n "+$iteration" $asmakefile.tmp)
 			fi
 		;;
+		
+		*)
+		:
+		;;
+	esac
+done < $asmakefile.tmp
+
+line=
+iteration=0
+# Read ASMakefile
+# This acctually reads from the ASMakefile.tmp
+while IFS= read -r line; do
+	iteration=$((iteration+1))
+	case $line in
+		project=*|project*)
+			project=$( get_brc )
+			eval $debug
+		;;
+		cc_flags=*|cc_flags*)
+			cc_flags=$( get_brc )
+			eval $debug
+		;;
+		cpp_flags=*|cpp_flags*)
+			cpp_flags=$( get_brc )
+			eval $debug
+		;;
+		linker_flags=*|linker_flags*)
+			ld_flags=$( get_brc )
+			eval $debug
+		;;
+		source_dir=*|source_dir*)
+			srcdir=$( get_brc )
+			[ -d $srcdir ] || fail "Source directory $srcdir not found"
+			eval $debug
+		;;
+		bin_dir=*|bin_dir*|bindir*)
+			bindir=$( get_brc )
+			eval $debug
+		;;
+		install=*|install*)
+			install=$( get_brc )
+			eval $debug
+		;;
+		comp_cc=*|comp_cc*)
+			ccomp=$( get_brc )
+			eval $debug
+		;;
+		comp_cpp=*|comp_cpp*)
+			echo
+			cppcomp=$( get_brc )
+			eval $debug
+		;;
+		add_source=*|add_source*)
+			sources[$arrnum]=$( get_brc )
+			[ -f $srcdir/${sources[$arrnum]} ] || fail "Couldnt find ${sources[$arrnum]} source file"
+			arrnum=$((arrnum+1))
+			eval $debug
+		;;
+		link_with=*|link_with*)
+			link=$( get_brc )
+			eval $debug
+		;;
+		print*)
+			print[$pctr]=$( get_brc )
+			pctr=$((pctr+1))
+			eval $debug
+		;;
+		target*)
+			config="false"
+			export config
+			target=$( get_brc )
+			[ -f "$target" ] || fail "Couldnt find $target"
+			runtarget="amakesys $opts -i $target"
+			export opts
+			eval $debug
+		;;
+		all_cpp_sources*)
+			sctr=0
+			cd $srcdir
+			cppfiles=$(ls -1R *.cpp 2> /dev/null)
+			cppfiles+=" $(ls -1R *.C 2> /dev/null)"
+			cppfiles+=" $(ls -1R *.CPP 2> /dev/null)"
+			cppfiles+=" $(ls -1R *.c++ 2> /dev/null)"
+			cppfiles+=" $(ls -1R *.cp 2> /dev/null)"
+			cppfiles+=" $(ls -1R *.cxx 2> /dev/null)"
+			fileslns=$(echo "$cppfiles" | wc -l)
+			cppfiles=(${cppfiles[$*]})
+			for ((i=0;i<fileslns;i++)); do
+				j="${cppfiles[$i]}"
+				sources[$sctr]="$j"
+				sctr=$((sctr+1))
+			done
+			cd $currdir
+		;;
+		all_c_sources*)
+			sctr=0
+			ftype="c"
+			cd $srcdir
+			cppfiles=$(ls -1R *.${ftype} 2> /dev/null)
+			fileslns=$(echo "$cppfiles" | wc -l)
+			cppfiles=(${cppfiles[$*]})
+			for ((i=0;i<fileslns;i++)); do
+				j="${cppfiles[$i]}"
+				sources[$sctr]="$j"
+				sctr=$((sctr+1))
+			done
+			cd $currdir
+		;;
+		exec_command*|exec_comand=*)
+			exccmd=$( get_brc )
+			eval "$exccmd"
+			eval "$debug"
+		;;
+		add_dep*)
+			deps[$depctr]="$( get_brc )"
+			((depctr++))
+			eval $debug
+		;;
+		shared*)
+			cpp_flags+=" -fPIC"
+			cc_flags+=" -fPIC"
+			ld_flags+=" -shared"
+		;;
+		ifeq*)
+		:
+		;;
+		ifnoteq*)
+		:
+		;;
 		\#*)
 			:
 		;;
 		\end\;*)
 			:
 		;;
+		\;*)
+			:
+		;;
 		*)
 		echo "Syntax error or unsupported ASMakefile format"
 		echo "Exit with code: 1"
-		sudo rm -rf $asmakefile.tmp
-		sudo rm -rf $asmakefile.tmp.tmp
+		rm -rf $asmakefile.tmp
+		rm -rf $asmakefile.tmp.tmp
+		rm -rf $asmakefile.tmp.t
 		exit 1
 		;;
 	esac
 done < "$asmakefile.tmp"
-# Removes the ASMakefile.tmp after reading
-sudo rm -rf $asmakefile.tmp
-sudo rm -rf $asmakefile.tmp.tmp
+# Removes temporary files
+#rm -rf $asmakefile.tmp
+rm -rf $asmakefile.tmp.tmp
+rm -rf $asmakefile.tmp.t
 
 if [[ $project == "" ]]; then
 	echo "${fgCyan8}${txBold}Project name not set${txReset}"
@@ -901,6 +869,7 @@ eval $runtarget
 
 # Exits with a state of 0
 exit 0
+
 
 
 
