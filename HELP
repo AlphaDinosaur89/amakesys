@@ -39,14 +39,6 @@ Prints Text after building
 target(target)
 Adds target file as a second target or third or fourth and so on
 
-all_cpp_sources()
-Adds all c++ sources in the source directory
-Ran when its read
-
-all_c_sources()
-Adds all c++ sources in the source directory
-Ran when its read
-
 exec_command(command)
 Executes an command when its read
 
