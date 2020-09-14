@@ -10,6 +10,3 @@ jobs:
          script: bash amakesys install
        - stage: clean
          script: bash amakesys clean
-
-matrix:
-  fast_finish: true
