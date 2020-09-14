@@ -2,54 +2,94 @@
 
 # Declares a few colors with tput
 # Foreground
-export fgBlack8="$(tput setaf 0)";
-export fgRed8="$(tput setaf 1)";
-export fgGreen8="$(tput setaf 2)";
-export fgYellow8="$(tput setaf 3)";
-export fgBlue8="$(tput setaf 4)";
-export fgMagenta8="$(tput setaf 5)";
-export fgCyan8="$(tput setaf 6)";
-export fgWhite8="$(tput setaf 7)";
+fgBlack8="$(tput setaf 0)";
+export fgBlack8
+fgRed8="$(tput setaf 1)";
+export fgRed8
+fgGreen8="$(tput setaf 2)";
+export fgGreen8
+fgYellow8="$(tput setaf 3)";
+export fgYellow8
+fgBlue8="$(tput setaf 4)";
+export fgBlue8
+fgMagenta8="$(tput setaf 5)";
+export fgMagenta8
+fgCyan8="$(tput setaf 6)";
+export fgCyan8
+fgWhite8="$(tput setaf 7)";
+export fgWhite8
 
 # Background
-export bgBlack8="$(tput setab 0)";
-export bgRed8="$(tput setab 1)";
-export bgGreen8="$(tput setab 2)";
-export bgYellow8="$(tput setab 3)";
-export bgBlue8="$(tput setab 4)";
-export bgMagenta8="$(tput setab 5)";
-export bgCyan8="$(tput setab 6)";
-export bgWhite8="$(tput setab 7)";
+bgBlack8="$(tput setab 0)";
+export bgBlack8
+bgRed8="$(tput setab 1)";
+export bgRed8
+bgGreen8="$(tput setab 2)";
+export bgGreen8
+bgYellow8="$(tput setab 3)";
+export bgYellow8
+bgBlue8="$(tput setab 4)";
+export bgBlue8
+bgMagenta8="$(tput setab 5)";
+export bgMagenta8
+bgCyan8="$(tput setab 6)";
+export bgCyan8
+bgWhite8="$(tput setab 7)";
+export bgWhite8
 
 # Other colors
 # Foreground
-export fgLightGray="\e[37m"
-export fgDarkGray="\e[90m"
-export fgLightRed="\e[91"
-export fgLightGreen="\e[92m"
-export fgLightYellow="\e[93m"
-export fgLightBlue="\e[94m"
-export fgLightMagenta="\e[95m"
-export fgLightCyan="\e[96m"
+fgLightGray="\e[37m"
+export fgLightGray
+fgDarkGray="\e[90m"
+export fgDarkGray
+fgLightRed="\e[91"
+export fgLightRed
+fgLightGreen="\e[92m"
+export fgLightGreen
+fgLightYellow="\e[93m"
+export fgLightYellow
+fgLightBlue="\e[94m"
+export fgLightBlue
+fgLightMagenta="\e[95m"
+export fgLightMagenta
+fgLightCyan="\e[96m"
+export fgLightCyan
 
 # Background
-export bgLightGray="\e[47m"
-export bgDarkGray="\e[100m"
-export bgLightRed="\e[101"
-export bgLightGreen="\e[102m"
-export bgLightYellow="\e[102m"
-export bgLightBlue="\e[104m"
-export bgLightMagenta="\e[105m"
-export bgLightCyan="\e[106m"
+bgLightGray="\e[47m"
+export bgLightGray
+bgDarkGray="\e[100m"
+export bgDarkGray
+bgLightRed="\e[101"
+export bgLightRed
+bgLightGreen="\e[102m"
+export bgLightGreen
+bgLightYellow="\e[102m"
+export bgLightYellow
+bgLightBlue="\e[104m"
+export bgLightBlue
+bgLightMagenta="\e[105m"
+export bgLightMagenta
+bgLightCyan="\e[106m"
+export bgLightCyan
 
-export txBold=$(tput bold)   # bold
-export txHalf=$(tput dim)    # half-bright
-export txUnderline=$(tput smul)   # underline
-export txEndUnder=$(tput rmul)   # exit underline
-export txReverse=$(tput rev)    # reverse
-export txStandout=$(tput smso)   # standout
-export txEndStand=$(tput rmso)   # exit standout
-export txReset=$(tput sgr0)   # reset attributes
+txBold=$(tput bold)   # bold
+export txBold
+txHalf=$(tput dim)    # half-bright
+export txHalf
+txUnderline=$(tput smul)   # underline
+export txUnderline
+txEndUnder=$(tput rmul)   # exit underline
+export txEndUnder
+txReverse=$(tput rev)    # reverse
+export txReverse
+txStandout=$(tput smso)   # standout
+export txStandout
+txEndStand=$(tput rmso)   # exit standout
+export txEndStand
+txReset=$(tput sgr0)   # reset attributes
+export txReset
 
 # Declares variables required/optional for amakesys to work
 prefix="/usr/local"
@@ -132,19 +172,19 @@ OPTIND=1
 while getopts "p:ocdri:hul" o; do
 case $o in
 		p) prefix="$OPTARG" 
-		   opts+="--prefix $OPTARG " ;;
+		   opts+=("--prefix $OPTARG") ;;
 		o) instopt="true"
-		   opts+="install " ;;
+		   opts+=("install") ;;
 		c) clsopt=true
-		   opts+="clean " ;;
+		   opts+=("clean") ;;
 		d) debug="echo \"Executing line: $iteration\""
-		   opts+="--debug ";;
+		   opts+=("--debug");;
 		r) runopt=true
-		   opts+="-r " ;;
+		   opts+=("-r") ;;
 		i) asmakefile="$OPTARG"
-		   opts+="-i $OPTARG " ;;
+		   opts+=("-i $OPTARG") ;;
 		u) update="true" 
-		   opts+="-u ";;
+		   opts+=("-u");;
 		h) usage ;;
 		*)
 		echo "Option not found"
@@ -152,7 +192,7 @@ case $o in
 		;;
 	esac
 done
-shift $(expr $OPTIND - 1)
+shift "$(expr $OPTIND - 1)"
 # gets a string inside first matching brackets
 get_brc() 
 {
@@ -374,13 +414,13 @@ while IFS= read -r line; do
 			export config
 			target=$( get_brc )
 			[ -f "$target" ] || fail "Couldnt find $target"
-			runtarget="amakesys $opts -i $target"
-			export opts
+			runtarget="amakesys ${opts[*]} -i $target"
+			export "${opts[@]}"
 			eval $debug
 		;;
 		all_cpp_sources*)
 			sctr=0
-			cd $srcdir
+			cd $srcdir || fail cd failed
 			cppfiles=$(ls -1R *.cpp 2> /dev/null)
 			cppfiles+=" $(ls -1R *.C 2> /dev/null)"
 			cppfiles+=" $(ls -1R *.CPP 2> /dev/null)"
@@ -388,27 +428,27 @@ while IFS= read -r line; do
 			cppfiles+=" $(ls -1R *.cp 2> /dev/null)"
 			cppfiles+=" $(ls -1R *.cxx 2> /dev/null)"
 			fileslns=$(echo "$cppfiles" | wc -l)
-			cppfiles=(${cppfiles[$*]})
+			cppfiles=("${cppfiles[$*]}")
 			for ((i=0;i<fileslns;i++)); do
 				j="${cppfiles[$i]}"
 				sources[$sctr]="$j"
 				sctr=$((sctr+1))
 			done
-			cd $currdir
+			cd $currdir || fail cd failed
 		;;
 		all_c_sources*)
 			sctr=0
 			ftype="c"
-			cd $srcdir
-			cppfiles=$(ls -1R *.${ftype} 2> /dev/null)
-			fileslns=$(echo "$cppfiles" | wc -l)
-			cppfiles=(${cppfiles[$*]})
+			cd $srcdir || fail cd failed
+			cppfiles=("$(ls -1R *.${ftype} 2> /dev/null)")
+			fileslns=$(echo "${cppfiles[*]}" | wc -l)
+			cppfiles=("${cppfiles[$*]}")
 			for ((i=0;i<fileslns;i++)); do
 				j="${cppfiles[$i]}"
 				sources[$sctr]="$j"
 				sctr=$((sctr+1))
 			done
-			cd $currdir
+			cd $currdir || fail cd failed
 		;;
 		exec_command*|exec_comand=*)
 			exccmd=$( get_brc )
@@ -537,12 +577,6 @@ get_tobj() {
 	esac
 	echo "${sources[$i]}"
 }
-get_cxx_src() {
-	cxxsrc="${sources[$ctr]}" | grep "${sources[$ctr]}.cpp"
-}
-get_c_src() {
-	ccsrc="${sources[$ctr]}" | grep "${sources[$ctr]}.c"
-}
 ok() {
 	printf "${txBold}${fgGreen8}OK${txReset}\n"
 }
@@ -664,7 +698,7 @@ if [ "$clsopt" != "true" ] && [ "$instopt" != "true" ] && [ "$alr_built" != "tru
 	# Declares what to link
 	while (( $i < ${#sources[*]} )); do
 		ssrc="build/objs/$( get_tobj )"
-		srcs+="$ssrc"
+		srcs+=("$ssrc")
 		i=$((i+1))
 	done
 	
