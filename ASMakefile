@@ -1,0 +1,16 @@
+project(hello)
+
+print(\n)
+print(ASMakefile for travis ci)
+print(\n)
+
+comp_cpp(true)
+
+source_dir(src)
+
+linker_flags(-static)
+
+add_source(file.cpp)
+add_source(main.cpp)
+
+install(true)
