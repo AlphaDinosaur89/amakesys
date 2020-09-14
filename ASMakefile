@@ -1,17 +1,20 @@
-# Example of a ASMakefile
+# Cool hello world program
 project(hello)
-
-print(\n)
-print(ASMakefile for travis ci)
-print(\n)
 
 comp_cpp(true)
 
+ifeq a cool
+	print($a = cool\n)
+	ifeq b a
+		print($b = a\n)
+		ifeq c b
+			print($c = b\n)
+		end;
+	end;
+end;
+
 source_dir(src)
-
 linker_flags(-static)
-
-add_source(file.cpp)
-add_source(main.cpp)
+add_source(main.cxx)
 
 install(true)
