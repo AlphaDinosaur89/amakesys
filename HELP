@@ -59,16 +59,24 @@ ifeq var true (tabs not allowed)
 	exec_command(rm bar.tmp)
 	ifeq b $var
 		print($b = true\n)
-	end;
-end; <----- Closes the ifeq statement.
+	end; b $var <---- Closes the "ifeq b $var statement"
+end; var true <----- Closes the "ifeq var true" statement.
 Make sure to include those
 Nested ifeq do not work
 
 ifnoteq [VARIABLE] [STRING/VARIABLE] (You might need to export the variable)
 Like ifeq but only executes the code if the variable is not equal
 
-ifdef [VARIABLE] (not really if defined)
-If VARIABLE is not equals to "" then executes
+ifdef [VARIABLE] Will add in a later release, probably the next
+If VARIABLE is defined then executes
+
+end; [VARIABLE] [STRING/VARIABLE]
+Closes the ifeq and ifnoteq statements
+Example
+
+ifeq a b
+	print($a = b\n)
+end; a b
 
 #
 Comment
