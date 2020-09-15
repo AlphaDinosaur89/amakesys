@@ -52,6 +52,7 @@ Creates a shared library
 ifeq [VARIABLE] [STRING/VARIABLE] (You might need to export the variable)
 If the variable is equals a the string then the code inside the ifeq statement left there or
 else the code is deleted.
+Only works with only one ifeq or ifnoteq statement in it
 Example:
 
 ifeq var true (tabs not allowed)
