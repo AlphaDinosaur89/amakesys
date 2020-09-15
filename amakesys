@@ -457,9 +457,10 @@ while IFS= read -r line; do
 			:
 		;;
 		*)
-		echo "Syntax error or unsupported ASMakefile format"
+		echo "Syntax error on $asmakefile"
+		echo "Line: $line"
 		echo "Exit with code: 1"
-		#rm -rf $asmakefile.tmp
+		rm -rf $asmakefile.tmp
 		rm -rf $asmakefile.tmp.tmp
 		rm -rf $asmakefile.tmp.t
 		exit 1
@@ -467,7 +468,7 @@ while IFS= read -r line; do
 	esac
 done < "$asmakefile.tmp"
 # Removes temporary files
-#rm -rf $asmakefile.tmp
+rm -rf $asmakefile.tmp
 rm -rf $asmakefile.tmp.tmp
 rm -rf $asmakefile.tmp.t
 
